@@ -8,8 +8,14 @@ From navigation to UI text, everything can be **configured through a powerful ad
 
 ## 📸 Screenshots
 
-![Login Page](<img width="842" height="799" alt="image" src="https://github.com/user-attachments/assets/1e1188f2-fdac-49ca-a380-2894335fc655" />)  
-![Dashboard](<img width="1698" height="1149" alt="image" src="https://github.com/user-attachments/assets/706258ce-bd13-44cd-8779-baff2450dabd" />)  
+![Login Page]
+
+<img width="980" height="1143" alt="image" src="https://github.com/user-attachments/assets/cf50dc7b-88a8-4084-90a5-571c3798e26b" />
+
+![Dashboard]
+
+<img width="1698" height="1149" alt="image" src="https://github.com/user-attachments/assets/6c598eba-6c23-4240-bb4a-8100849757f2" />
+
 
 ---
 

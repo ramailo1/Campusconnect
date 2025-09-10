@@ -1,5 +1,5 @@
 
-import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users as UsersIcon, Component } from 'lucide-react';
+import { FileText, User as UserIconLucid, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users as UsersIcon, Component } from 'lucide-react';
 
 export const iconMap: Record<string, React.ElementType> = {
     Home,
@@ -10,7 +10,7 @@ export const iconMap: Record<string, React.ElementType> = {
     Users: UsersIcon,
     Shield,
     Settings,
-    User,
+    User: UserIconLucid,
     GraduationCap,
     Component
 }
@@ -166,7 +166,7 @@ export type User = {
   id: string
   name: string
   email: string
-  role: 'student' | 'faculty' | 'admin'
+  role: string
 }
 
 export const users: User[] = [

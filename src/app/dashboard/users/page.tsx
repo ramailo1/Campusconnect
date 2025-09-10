@@ -1,7 +1,8 @@
 
+
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -21,7 +22,8 @@ import {
 } from "@/components/ui/select"
 import { users as allUsers } from "@/lib/data"
 import type { User } from "@/lib/data"
-import { defaultRoles } from "@/lib/roles"
+import type { Role } from "@/lib/roles"
+import { getRoles } from "@/lib/firebase"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
@@ -31,7 +33,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>(allUsers)
+    const [roles, setRoles] = useState<Role[]>([])
     const [editingUser, setEditingUser] = useState<User | null>(null)
+
+    useEffect(() => {
+        const fetchRoles = async () => {
+            const fetchedRoles = await getRoles();
+            setRoles(fetchedRoles);
+        };
+        fetchRoles();
+    }, []);
 
     const handleOpenEditDialog = (user: User) => {
         setEditingUser(user);
@@ -50,7 +61,7 @@ export default function UsersPage() {
             ...editingUser,
             name: formData.get("name") as string,
             email: formData.get("email") as string,
-            role: formData.get("role") as 'student' | 'faculty' | 'admin',
+            role: formData.get("role") as string,
         };
 
         setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u));
@@ -60,6 +71,10 @@ export default function UsersPage() {
     const handleDeleteUser = (userId: string) => {
         setUsers(users.filter(u => u.id !== userId));
     };
+
+    const getRoleName = (roleId: string) => {
+        return roles.find(r => r.id === roleId)?.name || roleId;
+    }
 
     return (
         <>
@@ -88,7 +103,7 @@ export default function UsersPage() {
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>
-                                            <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>{user.role}</Badge>
+                                            <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>{getRoleName(user.role)}</Badge>
                                         </TableCell>
                                         <TableCell>
                                              <DropdownMenu>
@@ -146,7 +161,7 @@ export default function UsersPage() {
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {defaultRoles.map(role => (
+                                    {roles.map(role => (
                                         <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -191,7 +206,7 @@ export default function UsersPage() {
                         <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent>
-                        {defaultRoles.map(role => (
+                        {roles.map(role => (
                             <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
                         ))}
                     </SelectContent>

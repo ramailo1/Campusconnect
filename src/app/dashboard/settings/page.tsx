@@ -200,22 +200,27 @@ export default function SettingsPage() {
     }
 
     const handleRoleChange = async (index: number, updatedRole: Partial<Role>) => {
+        const roleToUpdate = { ...roles[index], ...updatedRole };
+        
+        // Optimistically update the UI
         const newRoles = [...roles];
-        const roleToUpdate = { ...newRoles[index], ...updatedRole };
         newRoles[index] = roleToUpdate;
         setRoles(newRoles);
+
         try {
             await updateRole(roleToUpdate);
             toast({ title: "Role updated successfully." });
         } catch (error) {
             toast({ variant: "destructive", title: "Failed to update role." });
-            // Optionally revert state
+            // Revert state if the update fails
+            const fetchedRoles = await getRoles();
+            setRoles(fetchedRoles);
         }
     };
 
     const handlePermissionChange = (roleIndex: number, permission: Permission, checked: boolean) => {
         const role = roles[roleIndex];
-        const currentPermissions = role.permissions;
+        const currentPermissions = role.permissions || [];
         const newPermissions = checked
             ? [...currentPermissions, permission]
             : currentPermissions.filter(p => p !== permission);
@@ -479,7 +484,12 @@ export default function SettingsPage() {
                                                     <div className="flex items-center gap-4 flex-1">
                                                         <Input 
                                                             value={role.name} 
-                                                            onChange={(e) => handleRoleChange(roleIndex, { name: e.target.value })} 
+                                                            onBlur={(e) => handleRoleChange(roleIndex, { name: e.target.value })}
+                                                            onChange={(e) => {
+                                                                const newRoles = [...roles];
+                                                                newRoles[roleIndex] = {...newRoles[roleIndex], name: e.target.value };
+                                                                setRoles(newRoles);
+                                                            }}
                                                             className="font-semibold text-lg"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />

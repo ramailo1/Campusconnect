@@ -14,15 +14,16 @@ export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
   const NavLink = ({ item }: { item: NavItem }) => {
     if (item.hidden) return null;
     return (
-      <SidebarMenuItem key={item.href}>
+      <SidebarMenuItem>
           <Link href={item.href} legacyBehavior passHref>
             <SidebarMenuButton
               as="a"
               isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')}
               tooltip={item.label}
+              className="justify-start"
             >
               <item.icon />
-              <span>{item.label}</span>
+              <span className="group-[[data-state=collapsed]]:hidden">{item.label}</span>
             </SidebarMenuButton>
           </Link>
       </SidebarMenuItem>

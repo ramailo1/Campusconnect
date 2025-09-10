@@ -2,6 +2,10 @@
 
 This project is a comprehensive, customizable campus management system built with a modern web stack. It provides a suite of tools for students, faculty, and administrators to manage courses, appointments, library resources, and more. The entire application, from navigation to UI text, can be configured through a powerful admin settings panel.
 
+## Screenshots
+
+![Login Page](https://storage.googleapis.com/aifirebase/images/campus-connect-login.png "Login Page")
+
 ## Features
 
 - **Dynamic Dashboard**: A customizable dashboard that provides an at-a-glance overview of key metrics and recent activity. Admins can configure which modules and analytics are displayed.
@@ -60,6 +64,13 @@ npm run dev
 ```
 
 This will start the Next.js development server, typically on `http://localhost:9002`.
+
+### Demo Credentials
+
+To log in and explore the application, you can use the default Super Admin account:
+
+- **Email**: `admin@campus.edu`
+- **Password**: `123`
 
 ## Configuration
 

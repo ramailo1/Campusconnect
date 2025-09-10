@@ -19,13 +19,44 @@ export type NavItem = {
     href: string;
     icon: React.ElementType;
     label: string;
+    description?: string; // Optional description for dashboard cards
+    image?: string; // Optional image for dashboard cards
+    imageHint?: string; // Optional image hint for dashboard cards
 }
 
 export const navItems: NavItem[] = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard' },
-  { href: '/dashboard/courses', icon: BookOpen, label: 'Courses' },
-  { href: '/dashboard/appointments', icon: Calendar, label: 'Appointments' },
-  { href: '/dashboard/library', icon: FileText, label: 'Library' },
+  { 
+    href: '/dashboard', 
+    icon: Home, 
+    label: 'Dashboard',
+    description: 'Overview of all your activities and modules.',
+    image: "https://picsum.photos/seed/course4/600/400",
+    imageHint: "university campus"
+  },
+  { 
+    href: '/dashboard/courses', 
+    icon: BookOpen, 
+    label: 'Courses',
+    description: 'Access your enrolled courses, materials, and grades.',
+    image: "https://picsum.photos/seed/course1/600/400",
+    imageHint: "abstract geometry"
+  },
+  { 
+    href: '/dashboard/appointments', 
+    icon: Calendar, 
+    label: 'Appointments',
+    description: 'Schedule and manage appointments with advisors and faculty.',
+    image: "https://picsum.photos/seed/course2/600/400",
+    imageHint: "modern library"
+  },
+  { 
+    href: '/dashboard/library', 
+    icon: FileText, 
+    label: 'Library',
+    description: 'Search the digital library, reserve books, and access journals.',
+    image: "https://picsum.photos/seed/course3/600/400",
+    imageHint: "students collaborating"
+  },
 ];
 
 export const adminNavItems: NavItem[] = [

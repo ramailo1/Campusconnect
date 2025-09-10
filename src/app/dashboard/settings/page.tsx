@@ -64,6 +64,11 @@ export default function SettingsPage() {
         buttonText: "Add Book"
     });
 
+    const [dashboardSettings, setDashboardSettings] = useState({
+        modules: navItems.filter(item => item.href !== '/dashboard').map(item => item.href),
+        metrics: ["online-users", "booked-books", "total-appointments"]
+    })
+
 
     const handleNavItemChange = (index: number, field: keyof NavItem, value: string) => {
         const newItems = [...navItems];
@@ -145,11 +150,26 @@ export default function SettingsPage() {
     const handleRemoveRole = (index: number) => {
         setRoles(roles.filter((_, i) => i !== index))
     }
+    
+    const handleDashboardModuleChange = (href: string, checked: boolean) => {
+        setDashboardSettings(prev => ({
+            ...prev,
+            modules: checked ? [...prev.modules, href] : prev.modules.filter(m => m !== href)
+        }))
+    }
+    
+    const handleDashboardMetricChange = (key: string, checked: boolean) => {
+        setDashboardSettings(prev => ({
+            ...prev,
+            metrics: checked ? [...prev.metrics, key] : prev.metrics.filter(m => m !== key)
+        }))
+    }
 
     const handleSaveChanges = () => {
         console.log("Saving new nav items:", navItems)
         console.log("Saving new admin nav items:", adminNavItems)
         console.log("Saving new roles:", roles)
+        console.log("Saving dashboard settings:", dashboardSettings)
         toast({
             title: "Settings Saved",
             description: "Your changes have been updated. (This is a simulation)",
@@ -161,6 +181,12 @@ export default function SettingsPage() {
     ))
     
     const allPermissions = Object.keys(permissionLabels) as Permission[]
+    
+    const dashboardMetricsOptions = [
+        { key: "online-users", label: "Online Users" },
+        { key: "booked-books", label: "Booked Books" },
+        { key: "total-appointments", label: "Total Appointments" },
+    ]
 
     return (
         <div className="grid gap-6">
@@ -171,10 +197,11 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="navigation" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3">
+                        <TabsList className="grid w-full grid-cols-4">
                             <TabsTrigger value="navigation">Navigation</TabsTrigger>
                             <TabsTrigger value="roles">Roles &amp; Permissions</TabsTrigger>
                             <TabsTrigger value="ui-customization">UI Customization</TabsTrigger>
+                            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="navigation" className="pt-6">
@@ -436,6 +463,51 @@ export default function SettingsPage() {
                                             </AccordionContent>
                                         </AccordionItem>
                                     </Accordion>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                        
+                        <TabsContent value="dashboard" className="pt-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Dashboard Layout</CardTitle>
+                                    <CardDescription>Choose which modules and metrics to display on the main dashboard.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="grid gap-6 md:grid-cols-2">
+                                    <div className="grid gap-4">
+                                        <h4 className="font-medium">Dashboard Modules</h4>
+                                        <div className="space-y-2">
+                                            {navItems.filter(item => item.href !== '/dashboard').map(item => (
+                                                <div key={item.href} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`module-${item.href}`}
+                                                        checked={dashboardSettings.modules.includes(item.href)}
+                                                        onCheckedChange={(checked) => handleDashboardModuleChange(item.href, !!checked)}
+                                                    />
+                                                    <Label htmlFor={`module-${item.href}`} className="font-normal">
+                                                        Display "{item.label}" card
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-4">
+                                        <h4 className="font-medium">Key Metrics</h4>
+                                        <div className="space-y-2">
+                                             {dashboardMetricsOptions.map(metric => (
+                                                <div key={metric.key} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`metric-${metric.key}`}
+                                                        checked={dashboardSettings.metrics.includes(metric.key)}
+                                                        onCheckedChange={(checked) => handleDashboardMetricChange(metric.key, !!checked)}
+                                                    />
+                                                    <Label htmlFor={`metric-${metric.key}`} className="font-normal">
+                                                        {metric.label}
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </TabsContent>

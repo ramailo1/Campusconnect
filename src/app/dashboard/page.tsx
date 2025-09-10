@@ -1,3 +1,5 @@
+
+"use client"
 import {
   Card,
   CardContent,
@@ -5,67 +7,121 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { BookOpen, Calendar, FileText, Activity } from "lucide-react"
+import { BookCopy, CalendarDays, Users, Library, Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { navItems, appointments, libraryBooks, users } from "@/lib/data"
+import { useMemo, useState } from "react"
 
-const modules = [
-  {
-    title: "My Courses",
-    description: "Access your enrolled courses, materials, and grades.",
-    icon: BookOpen,
-    href: "/dashboard/courses",
-    image: "https://picsum.photos/seed/course1/600/400",
-    imageHint: "abstract geometry"
-  },
-  {
-    title: "Appointments",
-    description: "Schedule and manage appointments with advisors and faculty.",
-    icon: Calendar,
-    href: "/dashboard/appointments",
-    image: "https://picsum.photos/seed/course2/600/400",
-    imageHint: "modern library"
-  },
-  {
-    title: "Library",
-    description: "Search the digital library, reserve books, and access journals.",
-    icon: FileText,
-    href: "/dashboard/library",
-    image: "https://picsum.photos/seed/course3/600/400",
-    imageHint: "students collaborating"
-  },
-]
 
 export default function Dashboard() {
+  // In a real app, these would be managed in a global state or settings context
+  const [displayedModules, setDisplayedModules] = useState([
+    "/dashboard/courses",
+    "/dashboard/appointments",
+    "/dashboard/library",
+  ])
+  const [displayedMetrics, setDisplayedMetrics] = useState([
+    "online-users",
+    "booked-books",
+    "total-appointments",
+  ])
+
+  const modules = useMemo(() => {
+    return navItems.filter(item => displayedModules.includes(item.href) && item.href !== '/dashboard')
+  }, [displayedModules])
+
+  const metrics = useMemo(() => {
+    const onlineUsers = Math.floor(Math.random() * users.length) + 1;
+    const bookedBooks = libraryBooks.filter(b => b.borrowedBy).length
+    const totalAppointments = appointments.length
+
+    return [
+      {
+        key: "online-users",
+        icon: Users,
+        label: "Online Users",
+        value: onlineUsers,
+        description: "Users currently active",
+      },
+      {
+        key: "booked-books",
+        icon: Library,
+        label: "Books Checked Out",
+        value: bookedBooks,
+        description: "Books currently on loan",
+      },
+      {
+        key: "total-appointments",
+        icon: CalendarDays,
+        label: "Total Appointments",
+        value: totalAppointments,
+        description: "Scheduled appointments",
+      },
+    ].filter(m => displayedMetrics.includes(m.key))
+  }, [displayedMetrics])
+
+
   return (
     <>
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">Dashboard</h1>
       </div>
+       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+        {metrics.map((metric) => (
+          <Card key={metric.key}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {metric.label}
+              </CardTitle>
+              <metric.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metric.value}</div>
+              <p className="text-xs text-muted-foreground">
+                {metric.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
         {modules.map((module) => (
-          <Card key={module.title}>
+          <Card key={module.label}>
             <CardHeader className="p-0 overflow-hidden rounded-t-lg">
-              <Image src={module.image} alt={module.title} width={600} height={400} className="aspect-video object-cover" data-ai-hint={module.imageHint} />
+              <Image src={module.image!} alt={module.label} width={600} height={400} className="aspect-video object-cover" data-ai-hint={module.imageHint} />
             </CardHeader>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <module.icon className="h-8 w-8 text-primary" />
-                <CardTitle>{module.title}</CardTitle>
+                <CardTitle>{module.label}</CardTitle>
               </div>
               <CardDescription className="mt-2">{module.description}</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href={module.href}>
                 <Button className="w-full">
-                  Go to {module.title}
+                  Go to {module.label}
                 </Button>
               </Link>
             </CardContent>
           </Card>
         ))}
       </div>
+       {modules.length === 0 && metrics.length === 0 && (
+          <Card className="flex flex-col items-center justify-center p-12 text-center col-span-full">
+              <CardHeader>
+                  <CardTitle>Dashboard is Empty</CardTitle>
+                  <CardDescription>Go to Settings {'>'} Dashboard to add modules and analytics.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <Link href="/dashboard/settings">
+                      <Button>Go to Settings</Button>
+                  </Link>
+              </CardContent>
+          </Card>
+      )}
     </>
   )
 }

@@ -1,6 +1,7 @@
+
+'use client';
 import Link from "next/link"
 import {
-  Bell,
   GraduationCap,
   Menu,
   Search,
@@ -14,28 +15,16 @@ import { UserNav } from "./user-nav"
 import { Notifications } from "./notifications"
 import { LanguageSwitcher } from "./language-switcher"
 import { DebugPanel } from "./debug-panel"
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function Header() {
+  const { toggleSidebar } = useSidebar();
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle navigation menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="flex flex-col">
-          <Link
-            href="#"
-            className="flex items-center gap-2 text-lg font-semibold mb-4"
-          >
-            <GraduationCap className="h-6 w-6 text-primary" />
-            <span>CampusConnect</span>
-          </Link>
-          <MainNav isMobile={true} />
-        </SheetContent>
-      </Sheet>
+      <Button variant="outline" size="icon" className="shrink-0 md:hidden" onClick={toggleSidebar}>
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle navigation menu</span>
+      </Button>
       <div className="w-full flex-1">
         <form>
           <div className="relative">

@@ -1,53 +1,80 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { libraryBooks as allBooks, currentUser, users } from "@/lib/data"
-import type { Book } from "@/lib/data"
+import { currentUser } from "@/lib/data"
+import type { Book, User } from "@/lib/data"
 import Image from "next/image"
 import { Search, BookCheck, BookUp, MoreVertical, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
+import { fetchCollection, addDocument, updateDocument, deleteDocument } from "@/lib/firebase"
 
 export default function LibraryPage() {
-  const [books, setBooks] = useState<Book[]>(allBooks)
+  const [books, setBooks] = useState<Book[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [newBook, setNewBook] = useState({ title: "", author: "", coverImage: "" })
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleBorrowReturn = (bookId: string) => {
-    setBooks(currentBooks =>
-      currentBooks.map(book => {
-        if (book.id === bookId) {
-          if (book.borrowedBy === currentUser.id) {
-            // Return the book
-            return { ...book, borrowedBy: null }
-          } else if (!book.borrowedBy) {
-            // Borrow the book
-            return { ...book, borrowedBy: currentUser.id }
-          }
+  useEffect(() => {
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const [fetchedBooks, fetchedUsers] = await Promise.all([
+                fetchCollection<Book>('libraryBooks'),
+                fetchCollection<User>('users')
+            ]);
+            setBooks(fetchedBooks);
+            setUsers(fetchedUsers);
+        } catch (error) {
+            console.error("Failed to fetch library data:", error);
+        } finally {
+            setIsLoading(false);
         }
-        return book
-      })
+    };
+    loadData();
+  }, []);
+
+  const handleBorrowReturn = async (bookId: string) => {
+    const book = books.find(b => b.id === bookId);
+    if (!book) return;
+
+    let updatedBorrowedBy;
+    if (book.borrowedBy === currentUser.id) {
+      updatedBorrowedBy = null;
+    } else if (!book.borrowedBy) {
+      updatedBorrowedBy = currentUser.id;
+    } else {
+      // Book is borrowed by someone else, do nothing.
+      return;
+    }
+    
+    await updateDocument('libraryBooks', bookId, { borrowedBy: updatedBorrowedBy });
+
+    setBooks(currentBooks =>
+      currentBooks.map(b => b.id === bookId ? { ...b, borrowedBy: updatedBorrowedBy } : b)
     )
   }
 
-  const handleDeleteBook = (bookId: string) => {
+  const handleDeleteBook = async (bookId: string) => {
+    await deleteDocument('libraryBooks', bookId);
     setBooks(currentBooks => currentBooks.filter(book => book.id !== bookId));
   }
 
-  const handleAddBook = (e: React.FormEvent) => {
+  const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBook.title || !newBook.author || !newBook.coverImage) return;
-    const newBookData: Book = {
-      id: `book-${Date.now()}`,
+    const newBookData: Omit<Book, 'id'> = {
       ...newBook,
       borrowedBy: null,
     };
-    setBooks(currentBooks => [newBookData, ...currentBooks]);
+    const addedBook = await addDocument('libraryBooks', newBookData);
+    setBooks(currentBooks => [addedBook, ...currentBooks]);
     setNewBook({ title: "", author: "", coverImage: "" });
   }
 
@@ -57,6 +84,10 @@ export default function LibraryPage() {
   )
 
   const isAdmin = currentUser.role === 'admin'
+
+  if (isLoading) {
+    return <div>Loading library...</div>
+  }
 
   return (
     <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-4">

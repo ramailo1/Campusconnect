@@ -20,28 +20,40 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { users as allUsers } from "@/lib/data"
 import type { User } from "@/lib/data"
 import type { Role } from "@/lib/roles"
-import { getRoles } from "@/lib/firebase"
+import { fetchRolesFromDB } from "@/lib/firebase"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { fetchCollection, addDocument, updateDocument, deleteDocument } from "@/lib/firebase"
 
 
 export default function UsersPage() {
-    const [users, setUsers] = useState<User[]>(allUsers)
+    const [users, setUsers] = useState<User[]>([])
     const [roles, setRoles] = useState<Role[]>([])
     const [editingUser, setEditingUser] = useState<User | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        const fetchRoles = async () => {
-            const fetchedRoles = await getRoles();
-            setRoles(fetchedRoles);
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                const [fetchedUsers, fetchedRoles] = await Promise.all([
+                    fetchCollection<User>('users'),
+                    fetchRolesFromDB()
+                ]);
+                setUsers(fetchedUsers);
+                setRoles(fetchedRoles);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            } finally {
+                setIsLoading(false);
+            }
         };
-        fetchRoles();
+        loadData();
     }, []);
 
     const handleOpenEditDialog = (user: User) => {
@@ -52,28 +64,47 @@ export default function UsersPage() {
         setEditingUser(null);
     };
 
-    const handleUpdateUser = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleUpdateUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!editingUser) return;
 
         const formData = new FormData(e.currentTarget);
-        const updatedUser: User = {
-            ...editingUser,
+        const updatedUserData = {
             name: formData.get("name") as string,
             email: formData.get("email") as string,
             role: formData.get("role") as string,
         };
 
-        setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u));
+        await updateDocument('users', editingUser.id, updatedUserData);
+        setUsers(users.map(u => u.id === editingUser.id ? { ...editingUser, ...updatedUserData } : u));
         handleCloseEditDialog();
     };
 
-    const handleDeleteUser = (userId: string) => {
+    const handleDeleteUser = async (userId: string) => {
+        await deleteDocument('users', userId);
         setUsers(users.filter(u => u.id !== userId));
+    };
+
+    const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const newUser: Omit<User, 'id'> = {
+            name: `${formData.get("first-name")} ${formData.get("last-name")}`,
+            email: formData.get("email") as string,
+            role: formData.get("role") as string,
+        };
+
+        const addedUser = await addDocument('users', newUser);
+        setUsers([...users, addedUser]);
+        (e.target as HTMLFormElement).reset();
     };
 
     const getRoleName = (roleId: string) => {
         return roles.find(r => r.id === roleId)?.name || roleId;
+    }
+
+    if (isLoading) {
+        return <div>Loading users...</div>
     }
 
     return (
@@ -135,28 +166,29 @@ export default function UsersPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form className="grid gap-6">
+                    <form onSubmit={handleAddUser} className="grid gap-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-3">
                                 <Label htmlFor="first-name">First Name</Label>
-                                <Input id="first-name" placeholder="John" />
+                                <Input name="first-name" id="first-name" placeholder="John" />
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="last-name">Last Name</Label>
-                                <Input id="last-name" placeholder="Doe" />
+                                <Input name="last-name" id="last-name" placeholder="Doe" />
                             </div>
                         </div>
                         <div className="grid gap-3">
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"
+                                name="email"
                                 type="email"
                                 placeholder="john.doe@example.com"
                             />
                         </div>
                         <div className="grid gap-3">
                             <Label htmlFor="role">Role</Label>
-                            <Select>
+                            <Select name="role">
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>

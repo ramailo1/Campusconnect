@@ -20,22 +20,19 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import {
-    appointments as allAppointments,
-    users,
-    currentUser,
-    availabilitySlots as allAvailabilitySlots
-} from "@/lib/data"
+import { currentUser } from "@/lib/data"
 import type { Appointment, AvailabilitySlot, User } from "@/lib/data"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Trash2 } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { format, parse, startOfDay, addMinutes } from "date-fns"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar } from "@/components/ui/calendar"
 import { defaultRoles } from "@/lib/roles"
+import { fetchCollection, addDocument, updateDocument, deleteDocument } from "@/lib/firebase"
+
 
 const timeSlots = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -43,8 +40,11 @@ const timeSlots = [
 ];
 
 export default function AppointmentsPage() {
-    const [appointments, setAppointments] = useState<Appointment[]>(allAppointments)
-    const [availability, setAvailability] = useState<AvailabilitySlot[]>(allAvailabilitySlots)
+    const [appointments, setAppointments] = useState<Appointment[]>([])
+    const [availability, setAvailability] = useState<AvailabilitySlot[]>([])
+    const [users, setUsers] = useState<User[]>([])
+    const [isLoading, setIsLoading] = useState(true);
+
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
     const [appointmentFormText, setAppointmentFormText] = useState({
@@ -63,6 +63,25 @@ export default function AppointmentsPage() {
     })
 
     useEffect(() => {
+        const loadData = async () => {
+            setIsLoading(true);
+            try {
+                const [fetchedAppointments, fetchedAvailability, fetchedUsers] = await Promise.all([
+                    fetchCollection<Appointment>('appointments'),
+                    fetchCollection<AvailabilitySlot>('availability'),
+                    fetchCollection<User>('users')
+                ]);
+                setAppointments(fetchedAppointments);
+                setAvailability(fetchedAvailability);
+                setUsers(fetchedUsers);
+            } catch (error) {
+                console.error("Failed to fetch appointment data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+
         const savedText = localStorage.getItem("appointmentFormText");
         if (savedText) {
             setAppointmentFormText(JSON.parse(savedText));
@@ -85,7 +104,6 @@ export default function AppointmentsPage() {
     const advisors = users.filter(u => u.role === 'faculty' || u.role === 'admin');
     const students = users.filter(u => u.role === 'student');
 
-    // State for the new appointment form
     const [selectedStudentId, setSelectedStudentId] = useState<string>("");
     const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>("");
     const [selectedBookingDate, setSelectedBookingDate] = useState<Date | undefined>();
@@ -111,13 +129,12 @@ export default function AppointmentsPage() {
         setEditingAppointment(null)
     }
 
-    const handleUpdateAppointment = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleUpdateAppointment = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!editingAppointment) return;
 
         const formData = new FormData(e.currentTarget);
-        const updatedAppointment: Appointment = {
-            ...editingAppointment,
+        const updatedAppointmentData = {
             studentId: formData.get("student-id") as string,
             advisorId: formData.get("advisor-id") as string,
             date: new Date(`${formData.get("date")}T${formData.get("time")}`).toISOString(),
@@ -125,42 +142,42 @@ export default function AppointmentsPage() {
             notes: formData.get("notes") as string,
         };
 
-        setAppointments(appointments.map(a => a.id === editingAppointment.id ? updatedAppointment : a));
+        await updateDocument('appointments', editingAppointment.id, updatedAppointmentData);
+        setAppointments(appointments.map(a => a.id === editingAppointment.id ? { ...editingAppointment, ...updatedAppointmentData } : a));
         handleCloseEditDialog();
     }
     
-    const handleCancelAppointment = (appointmentId: string) => {
+    const handleCancelAppointment = async (appointmentId: string) => {
+        await deleteDocument('appointments', appointmentId);
         setAppointments(appointments.filter(a => a.id !== appointmentId));
     }
 
-    const handleToggleAvailability = (time: string) => {
+    const handleToggleAvailability = async (time: string) => {
         if (!selectedDate) return;
         const dateStr = format(selectedDate, 'yyyy-MM-dd')
         const existingSlot = myAvailability.find(slot => slot.time === time)
 
         if (existingSlot) {
-            // Remove availability
+            await deleteDocument('availability', existingSlot.id);
             setAvailability(availability.filter(slot => slot.id !== existingSlot.id))
         } else {
-            // Add availability
-            const newSlot: AvailabilitySlot = {
-                id: `avail-${Date.now()}`,
+            const newSlotData: Omit<AvailabilitySlot, 'id'> = {
                 advisorId: currentUser.id,
                 date: dateStr,
                 time: time
             }
+            const newSlot = await addDocument('availability', newSlotData);
             setAvailability([...availability, newSlot])
         }
     }
     
-    const handleScheduleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleScheduleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const time = formData.get('time') as string;
         const studentId = currentUser.role === 'admin' ? selectedStudentId : currentUser.id;
         
         if (!selectedAdvisorId || !selectedBookingDate || !time || !studentId) {
-            // Basic validation
             return;
         }
 
@@ -168,16 +185,16 @@ export default function AppointmentsPage() {
         const [hours, minutes] = time.split(':').map(Number);
         const appointmentDateTime = addMinutes(addMinutes(date, minutes), hours * 60).toISOString();
 
-        const newAppointment: Appointment = {
-            id: `appt-${Date.now()}`,
+        const newAppointmentData: Omit<Appointment, 'id'> = {
             studentId: studentId,
             advisorId: selectedAdvisorId,
             date: appointmentDateTime,
             status: 'Confirmed',
             notes: formData.get('notes') as string,
         };
+        const newAppointment = await addDocument('appointments', newAppointmentData);
         setAppointments([newAppointment, ...appointments]);
-        // Reset form
+
         setSelectedAdvisorId("");
         setSelectedStudentId("");
         setSelectedBookingDate(undefined);
@@ -185,6 +202,9 @@ export default function AppointmentsPage() {
     
     const canScheduleAppointments = currentUser.role === 'student' || currentUser.role === 'admin';
 
+    if (isLoading) {
+        return <div>Loading appointments...</div>;
+    }
 
     return (
         <>
@@ -461,5 +481,3 @@ export default function AppointmentsPage() {
         </>
     )
 }
-
-    

@@ -12,39 +12,58 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { courses as allCourses, currentUser } from "@/lib/data"
+import { currentUser } from "@/lib/data"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Course } from "@/lib/data"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { fetchCollection, addDocument, updateDocument, deleteDocument } from "@/lib/firebase"
 
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>(allCourses)
+  const [courses, setCourses] = useState<Course[]>([])
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const fetchedCourses = await fetchCollection<Course>('courses');
+            setCourses(fetchedCourses);
+        } catch (error) {
+            console.error("Failed to fetch courses:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    loadData();
+  }, []);
   
   const isStudent = currentUser.role === 'student'
   const isFaculty = currentUser.role === 'faculty'
   const isAdmin = currentUser.role === 'admin'
 
-  const handleEnroll = (courseCode: string) => {
+  const handleEnroll = async (courseCode: string) => {
+    const course = courses.find(c => c.code === courseCode);
+    if (!course) return;
+
+    const isEnrolled = course.enrolledStudents.includes(currentUser.id)
+    let updatedEnrolledStudents;
+
+    if (isEnrolled) {
+      updatedEnrolledStudents = course.enrolledStudents.filter(id => id !== currentUser.id);
+    } else {
+      updatedEnrolledStudents = [...course.enrolledStudents, currentUser.id];
+    }
+    
+    await updateDocument('courses', courseCode, { enrolledStudents: updatedEnrolledStudents });
+
     setCourses(currentCourses =>
-      currentCourses.map(course => {
-        if (course.code === courseCode) {
-          const isEnrolled = course.enrolledStudents.includes(currentUser.id)
-          if (isEnrolled) {
-            // Disenroll
-            return { ...course, enrolledStudents: course.enrolledStudents.filter(id => id !== currentUser.id) }
-          } else {
-            // Enroll
-            return { ...course, enrolledStudents: [...course.enrolledStudents, currentUser.id] }
-          }
-        }
-        return course
-      })
+      currentCourses.map(c => c.code === courseCode ? { ...c, enrolledStudents: updatedEnrolledStudents } : c)
     )
   }
 
@@ -56,30 +75,53 @@ export default function CoursesPage() {
     setEditingCourse(null)
   }
 
-  const handleUpdateCourse = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdateCourse = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingCourse) return;
 
     const formData = new FormData(e.currentTarget);
-    const updatedCourse: Course = {
-      ...editingCourse,
+    const updatedCourseData = {
       name: formData.get("course-name") as string,
       code: formData.get("course-code") as string,
       description: formData.get("description") as string,
     };
 
-    setCourses(courses.map(c => c.code === editingCourse.code ? updatedCourse : c));
+    await updateDocument('courses', editingCourse.code, updatedCourseData);
+
+    setCourses(courses.map(c => c.code === editingCourse.code ? { ...editingCourse, ...updatedCourseData } : c));
     handleCloseEditDialog();
   }
   
-  const handleDeleteCourse = (courseCode: string) => {
+  const handleDeleteCourse = async (courseCode: string) => {
+    await deleteDocument('courses', courseCode);
     setCourses(courses.filter(c => c.code !== courseCode));
+  }
+
+  const handleAddCourse = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newCourse: Omit<Course, 'id'> = {
+      name: formData.get("course-name") as string,
+      code: formData.get("course-code") as string,
+      description: formData.get("description") as string,
+      instructor: currentUser.name,
+      enrolledStudents: [],
+    };
+
+    // In Firestore, we use the course code as the document ID
+    await updateDocument('courses', newCourse.code, newCourse);
+    
+    setCourses([...courses, { ...newCourse, id: newCourse.code }]);
+    (e.target as HTMLFormElement).reset();
   }
 
   const displayedCourses = isFaculty
     ? courses.filter(course => course.instructor === currentUser.name)
     : courses
 
+  if (isLoading) {
+    return <div>Loading courses...</div>
+  }
 
   return (
     <>
@@ -167,11 +209,12 @@ export default function CoursesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="grid gap-6">
+            <form onSubmit={handleAddCourse} className="grid gap-6">
               <div className="grid gap-3">
                 <Label htmlFor="course-name">Course Name</Label>
                 <Input
                   id="course-name"
+                  name="course-name"
                   type="text"
                   className="w-full"
                   placeholder="e.g. Introduction to Computer Science"
@@ -181,6 +224,7 @@ export default function CoursesPage() {
                 <Label htmlFor="course-code">Course Code</Label>
                 <Input
                   id="course-code"
+                  name="course-code"
                   type="text"
                   className="w-full"
                   placeholder="e.g. CS101"
@@ -190,6 +234,7 @@ export default function CoursesPage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
+                  name="description"
                   placeholder="A comprehensive introduction to the fundamental concepts of computer science..."
                   className="min-h-32"
                 />
@@ -224,6 +269,7 @@ export default function CoursesPage() {
                   id="edit-course-code"
                   name="course-code"
                   defaultValue={editingCourse.code}
+                  readOnly
                 />
               </div>
               <div className="grid gap-3">

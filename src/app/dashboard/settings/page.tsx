@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -112,6 +112,18 @@ export default function SettingsPage() {
         signinLink: "Sign in",
     });
     const [sidebarBehavior, setSidebarBehavior] = useState("expanded")
+    const [platformName, setPlatformName] = useState("CampusConnect")
+
+    useEffect(() => {
+        const savedSidebarBehavior = localStorage.getItem("sidebarBehavior") as "expanded" | "hover" | null;
+        if (savedSidebarBehavior) {
+            setSidebarBehavior(savedSidebarBehavior);
+        }
+        const savedPlatformName = localStorage.getItem("platformName");
+        if (savedPlatformName) {
+            setPlatformName(savedPlatformName);
+        }
+    }, []);
 
 
     const handleNavItemChange = (index: number, field: keyof NavItem, value: string | boolean) => {
@@ -210,16 +222,11 @@ export default function SettingsPage() {
     }
 
     const handleSaveChanges = () => {
-        console.log("Saving new nav items:", navItems)
-        console.log("Saving new admin nav items:", adminNavItems)
-        console.log("Saving new roles:", roles)
-        console.log("Saving dashboard settings:", dashboardSettings)
-        console.log("Saving dashboard text:", dashboardText)
-        
         // This is a mock save. In a real app, you'd save this to a database or a file.
         localStorage.setItem("dashboardSettings", JSON.stringify(dashboardSettings))
         localStorage.setItem("dashboardText", JSON.stringify(dashboardText))
         localStorage.setItem("sidebarBehavior", sidebarBehavior)
+        localStorage.setItem("platformName", platformName)
 
         toast({
             title: "Settings Saved",
@@ -473,6 +480,15 @@ export default function SettingsPage() {
                                 </CardHeader>
                                 <CardContent className="grid gap-6">
                                     <Accordion type="multiple" className="w-full">
+                                        <AccordionItem value="general-text">
+                                            <AccordionTrigger>General</AccordionTrigger>
+                                            <AccordionContent className="p-4 grid gap-4">
+                                                 <div className="grid gap-2">
+                                                    <Label htmlFor="platform-name">Platform Name</Label>
+                                                    <Input id="platform-name" value={platformName} onChange={(e) => setPlatformName(e.target.value)} />
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
                                         <AccordionItem value="dashboard-text">
                                             <AccordionTrigger>Dashboard Page</AccordionTrigger>
                                             <AccordionContent className="p-4 grid gap-4">

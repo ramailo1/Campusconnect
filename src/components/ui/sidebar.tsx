@@ -80,15 +80,22 @@ const SidebarProvider = React.forwardRef<
         }
     }, []);
 
-    // This is the internal state of the sidebar.
-    // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(() => {
+    const getInitialOpenState = () => {
         if (behavior === 'hover') return false;
-        const cookieValue = typeof window !== 'undefined' 
-            ? document.cookie.split('; ').find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))?.split('=')[1]
-            : undefined;
-        return cookieValue ? cookieValue === 'true' : defaultOpen;
-    });
+        if (typeof window !== 'undefined') {
+            const cookieValue = document.cookie.split('; ').find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))?.split('=')[1];
+            if (cookieValue) {
+                return cookieValue === 'true';
+            }
+        }
+        return defaultOpen;
+    };
+    
+    const [_open, _setOpen] = React.useState(getInitialOpenState);
+
+    React.useEffect(() => {
+        _setOpen(getInitialOpenState());
+    }, [behavior]);
 
     const open = openProp ?? _open
     const setOpen = React.useCallback(
@@ -201,16 +208,17 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, state, openMobile, setOpenMobile, behavior, setOpen } = useSidebar()
-
+    const [_open, _setOpen] = React.useState(false);
+    
     const handleMouseEnter = () => {
         if (behavior === 'hover' && !isMobile) {
-            setOpen(true);
+            _setOpen(true);
         }
     }
     
     const handleMouseLeave = () => {
         if (behavior === 'hover' && !isMobile) {
-            setOpen(false);
+            _setOpen(false);
         }
     }
 
@@ -249,6 +257,8 @@ const Sidebar = React.forwardRef<
       )
     }
 
+    const effectiveState = behavior === 'hover' ? (_open ? 'expanded' : 'collapsed') : state;
+
     return (
       <div
         ref={ref}
@@ -257,11 +267,11 @@ const Sidebar = React.forwardRef<
         className={cn(
             "group hidden md:block text-sidebar-foreground",
             "transition-all duration-200 ease-in-out",
-            state === 'collapsed' ? "w-[--sidebar-width-icon]" : "w-[--sidebar-width]",
+            effectiveState === 'collapsed' ? "w-[--sidebar-width-icon]" : "w-[--sidebar-width]",
             "border-r bg-muted/40"
             )}
-        data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
+        data-state={effectiveState}
+        data-collapsible={effectiveState === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
         {...props}
@@ -277,7 +287,7 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar, behavior } = useSidebar()
+  const { toggleSidebar, behavior, state } = useSidebar()
   
   if (behavior === 'hover') return null;
 
@@ -287,7 +297,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7 hidden md:flex", className)}
+      className={cn("h-7 w-7 hidden md:flex", className, { 'hidden': state === 'collapsed' })}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()

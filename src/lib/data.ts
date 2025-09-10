@@ -1,4 +1,4 @@
-import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users, Component } from 'lucide-react';
+import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users as UsersIcon, Component } from 'lucide-react';
 
 export const iconMap: Record<string, React.ElementType> = {
     Home,
@@ -6,7 +6,7 @@ export const iconMap: Record<string, React.ElementType> = {
     Calendar,
     FileText,
     LineChart,
-    Users,
+    Users: UsersIcon,
     Shield,
     Settings,
     User,
@@ -29,7 +29,7 @@ export const navItems: NavItem[] = [
 
 export const adminNavItems: NavItem[] = [
   { href: '/dashboard/analytics', icon: LineChart, label: 'Analytics' },
-  { href: '/dashboard/users', icon: Users, label: 'Users' },
+  { href: '/dashboard/users', icon: UsersIcon, label: 'Users' },
   { href: '/dashboard/audit-logs', icon: Shield, label: 'Audit Logs' },
   { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
@@ -124,3 +124,50 @@ export const auditLogs: AuditLog[] = [
     timestamp: new Date(Date.now() - 7 * 3600000).toISOString(),
   },
 ];
+
+export type User = {
+  id: string
+  name: string
+  email: string
+  role: 'student' | 'faculty' | 'admin'
+}
+
+export const users: User[] = [
+    { id: 'user-1', name: 'Super Admin', email: 'admin@campus.edu', role: 'admin' },
+    { id: 'user-2', name: 'Professor Jones', email: 'prof.jones@campus.edu', role: 'faculty' },
+    { id: 'user-3', name: 'Dr. Smith', email: 'dr.smith@campus.edu', role: 'faculty' },
+    { id: 'user-4', name: 'John Doe', email: 'john.doe@campus.edu', role: 'student' },
+    { id: 'user-5', name: 'Jane Smith', email: 'jane.smith@campus.edu', role: 'student' },
+]
+
+// This is a mock of the currently logged-in user.
+// In a real app, this would come from an auth context.
+export const currentUser: User = users[1] // Professor Jones
+
+export type Course = {
+    name: string;
+    code: string;
+    description: string;
+    instructor: string;
+}
+
+export const courses: Course[] = [
+    { name: "Introduction to AI", code: "CS461", description: "An intro to AI.", instructor: "Dr. Smith" },
+    { name: "Advanced Algorithms", code: "CS501", description: "Deep dive into algorithms.", instructor: "Professor Jones" },
+    { name: "Web Development", code: "CS330", description: "Building for the web.", instructor: "Professor Jones" },
+]
+
+export type Appointment = {
+    id: string
+    studentId: string
+    advisorId: string
+    date: string
+    status: 'Confirmed' | 'Pending' | 'Canceled'
+    notes: string
+}
+
+export const appointments: Appointment[] = [
+    { id: 'appt-1', studentId: 'user-4', advisorId: 'user-2', date: new Date(Date.now() + 86400000 * 2).toISOString(), status: 'Confirmed', notes: 'Discussing fall semester' },
+    { id: 'appt-2', studentId: 'user-5', advisorId: 'user-3', date: new Date(Date.now() + 86400000 * 3).toISOString(), status: 'Confirmed', notes: 'Thesis check-in' },
+    { id: 'appt-3', studentId: 'user-4', advisorId: 'user-3', date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'Pending', notes: 'Career advice' },
+]

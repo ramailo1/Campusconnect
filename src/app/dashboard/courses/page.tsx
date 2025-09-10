@@ -11,10 +11,70 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { courses as allCourses, currentUser } from "@/lib/data"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { MoreHorizontal } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export default function CoursesPage() {
+
+  const isAdmin = currentUser.role === 'admin'
+  const courses = isAdmin
+    ? allCourses
+    : allCourses.filter(course => course.instructor === currentUser.name)
+
+
   return (
-    <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+    <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3">
+      <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>My Courses</CardTitle>
+            <CardDescription>
+              A list of courses you are teaching or managing.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Course Name</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead className="hidden md:table-cell">Instructor</TableHead>
+                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {courses.map(course => (
+                  <TableRow key={course.code}>
+                    <TableCell className="font-medium">{course.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{course.code}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{course.instructor}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                          </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Add New Course</CardTitle>

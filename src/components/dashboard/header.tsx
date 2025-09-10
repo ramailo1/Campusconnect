@@ -16,6 +16,7 @@ import { Notifications } from "./notifications"
 import { LanguageSwitcher } from "./language-switcher"
 import { DebugPanel } from "./debug-panel"
 import { useSidebar } from "@/components/ui/sidebar";
+import { ThemeToggle } from "./theme-toggle";
 
 export default function Header() {
   const { toggleSidebar } = useSidebar();
@@ -39,6 +40,7 @@ export default function Header() {
       </div>
       <div className="flex items-center gap-2">
         <LanguageSwitcher />
+        <ThemeToggle />
         <DebugPanel />
         <Notifications />
         <UserNav />

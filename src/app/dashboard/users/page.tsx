@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { users as allUsers } from "@/lib/data"
+import { defaultRoles } from "@/lib/roles"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
@@ -108,9 +109,9 @@ export default function UsersPage() {
                                     <SelectValue placeholder="Select a role" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="student">Student</SelectItem>
-                                    <SelectItem value="faculty">Faculty</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
+                                    {defaultRoles.map(role => (
+                                        <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -25,18 +25,19 @@ import {
 } from "@/components/ui/accordion"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { NavItem } from "@/lib/data"
-import { defaultRoles, permissionLabels } from "@/lib/roles"
+import { permissionLabels } from "@/lib/roles"
 import type { Role, Permission } from "@/lib/roles"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { getRoles, addRole, updateRole, deleteRole } from "@/lib/firebase"
 
 
 export default function SettingsPage() {
     const { toast } = useToast()
     const [navItems, setNavItems] = useState<NavItem[]>(defaultNavItems)
     const [adminNavItems, setAdminNavItems] = useState<NavItem[]>(defaultAdminNavItems)
-    const [roles, setRoles] = useState<Role[]>(defaultRoles)
+    const [roles, setRoles] = useState<Role[]>([])
     const [newRoleName, setNewRoleName] = useState("")
 
     const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400", hidden: false })
@@ -113,8 +114,14 @@ export default function SettingsPage() {
     });
     const [sidebarBehavior, setSidebarBehavior] = useState("expanded")
     const [platformName, setPlatformName] = useState("CampusConnect")
-
+    
     useEffect(() => {
+        const fetchRoles = async () => {
+            const fetchedRoles = await getRoles();
+            setRoles(fetchedRoles);
+        };
+        fetchRoles();
+
         const savedSidebarBehavior = localStorage.getItem("sidebarBehavior") as "expanded" | "hover" | null;
         if (savedSidebarBehavior) {
             setSidebarBehavior(savedSidebarBehavior);
@@ -172,40 +179,59 @@ export default function SettingsPage() {
         }
     }
 
-    const handleRoleNameChange = (index: number, newName: string) => {
-        const newRoles = [...roles]
-        newRoles[index].name = newName
-        setRoles(newRoles)
-    }
+    const handleRoleChange = async (index: number, updatedRole: Partial<Role>) => {
+        const newRoles = [...roles];
+        const roleToUpdate = { ...newRoles[index], ...updatedRole };
+        newRoles[index] = roleToUpdate;
+        setRoles(newRoles);
+        try {
+            await updateRole(roleToUpdate);
+            toast({ title: "Role updated successfully." });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Failed to update role." });
+            // Optionally revert state
+        }
+    };
 
     const handlePermissionChange = (roleIndex: number, permission: Permission, checked: boolean) => {
-        const newRoles = [...roles]
-        const currentPermissions = newRoles[roleIndex].permissions
-        if (checked) {
-            newRoles[roleIndex].permissions = [...currentPermissions, permission]
-        } else {
-            newRoles[roleIndex].permissions = currentPermissions.filter(p => p !== permission)
-        }
-        setRoles(newRoles)
-    }
+        const role = roles[roleIndex];
+        const currentPermissions = role.permissions;
+        const newPermissions = checked
+            ? [...currentPermissions, permission]
+            : currentPermissions.filter(p => p !== permission);
+        handleRoleChange(roleIndex, { permissions: newPermissions });
+    };
     
-    const handleAddRole = () => {
+    const handleAddRole = async () => {
         if (!newRoleName.trim()) {
-            toast({ variant: "destructive", title: "Role name cannot be empty." })
-            return
+            toast({ variant: "destructive", title: "Role name cannot be empty." });
+            return;
         }
-        const newRole: Role = {
-            id: newRoleName.toLowerCase().replace(/\s+/g, '-'),
+        const newRoleData = {
             name: newRoleName,
             permissions: []
+        };
+        try {
+            const newRoleWithId = await addRole(newRoleData);
+            setRoles([...roles, newRoleWithId]);
+            setNewRoleName("");
+            toast({ title: "Role added successfully." });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Failed to add role." });
         }
-        setRoles([...roles, newRole])
-        setNewRoleName("")
-    }
+    };
 
-    const handleRemoveRole = (index: number) => {
-        setRoles(roles.filter((_, i) => i !== index))
-    }
+
+    const handleRemoveRole = async (index: number) => {
+        const roleIdToDelete = roles[index].id;
+        try {
+            await deleteRole(roleIdToDelete);
+            setRoles(roles.filter((_, i) => i !== index));
+            toast({ title: "Role removed successfully." });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Failed to remove role." });
+        }
+    };
     
     const handleDashboardSectionChange = (section: string, checked: boolean) => {
         setDashboardSettings(prev => ({
@@ -429,7 +455,11 @@ export default function SettingsPage() {
                                             <AccordionItem value={role.id} key={role.id}>
                                                 <AccordionTrigger>
                                                     <div className="flex items-center gap-4 flex-1">
-                                                        <Input value={role.name} onChange={(e) => handleRoleNameChange(roleIndex, e.target.value)} className="font-semibold text-lg" />
+                                                        <Input 
+                                                            value={role.name} 
+                                                            onChange={(e) => handleRoleChange(roleIndex, { name: e.target.value })} 
+                                                            className="font-semibold text-lg" 
+                                                        />
                                                     </div>
                                                 </AccordionTrigger>
                                                 <AccordionContent className="p-4">

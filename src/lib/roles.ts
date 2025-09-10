@@ -1,4 +1,5 @@
 
+
 export type Permission = 
   | 'view-dashboard'
   | 'manage-courses'

@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { libraryBooks as allBooks, currentUser } from "@/lib/data"
-import type { Book } from "@/lib/data"
+import { libraryBooks as allBooks, currentUser, users } from "@/lib/data"
+import type { Book, User } from "@/lib/data"
 import Image from "next/image"
 import { Search, BookCheck, BookUp } from "lucide-react"
 
@@ -37,6 +37,8 @@ export default function LibraryPage() {
     book.author.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const isAdmin = currentUser.role === 'admin'
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -61,17 +63,24 @@ export default function LibraryPage() {
         {filteredBooks.map(book => {
           const isBorrowedByCurrentUser = book.borrowedBy === currentUser.id
           const isAvailable = !book.borrowedBy
+          const borrower = !isAvailable && isAdmin ? users.find(u => u.id === book.borrowedBy) : null
 
           return (
             <Card key={book.id} className="flex flex-col">
               <CardHeader className="p-0 overflow-hidden rounded-t-lg relative">
                 <Image src={book.coverImage} alt={book.title} width={400} height={600} className="aspect-[2/3] object-cover" />
-                <Badge 
-                    className="absolute top-2 right-2"
-                    variant={isAvailable ? "secondary" : "destructive"}
-                >
-                    {isAvailable ? "Available" : "Checked Out"}
-                </Badge>
+                <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                  <Badge 
+                      variant={isAvailable ? "secondary" : "destructive"}
+                  >
+                      {isAvailable ? "Available" : "Checked Out"}
+                  </Badge>
+                  {borrower && (
+                    <Badge variant="outline">
+                      Borrowed by: {borrower.name}
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-4 flex-1">
                 <CardTitle className="text-lg mb-1">{book.title}</CardTitle>

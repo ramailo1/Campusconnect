@@ -143,7 +143,7 @@ export const users: User[] = [
 
 // This is a mock of the currently logged-in user.
 // In a real app, this would come from an auth context.
-export const currentUser: User = users[3] // John Doe (Student)
+export const currentUser: User = users[0] // Super Admin
 
 export type Course = {
     name: string;

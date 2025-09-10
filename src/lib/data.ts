@@ -22,6 +22,7 @@ export type NavItem = {
     description?: string; // Optional description for dashboard cards
     image?: string; // Optional image for dashboard cards
     imageHint?: string; // Optional image hint for dashboard cards
+    hidden?: boolean;
 }
 
 export const navItems: NavItem[] = [
@@ -31,7 +32,8 @@ export const navItems: NavItem[] = [
     label: 'Dashboard',
     description: 'Overview of all your activities and modules.',
     image: "https://picsum.photos/seed/course4/600/400",
-    imageHint: "university campus"
+    imageHint: "university campus",
+    hidden: false
   },
   { 
     href: '/dashboard/courses', 
@@ -39,7 +41,8 @@ export const navItems: NavItem[] = [
     label: 'Courses',
     description: 'Access your enrolled courses, materials, and grades.',
     image: "https://picsum.photos/seed/course1/600/400",
-    imageHint: "abstract geometry"
+    imageHint: "abstract geometry",
+    hidden: false
   },
   { 
     href: '/dashboard/appointments', 
@@ -47,7 +50,8 @@ export const navItems: NavItem[] = [
     label: 'Appointments',
     description: 'Schedule and manage appointments with advisors and faculty.',
     image: "https://picsum.photos/seed/course2/600/400",
-    imageHint: "modern library"
+    imageHint: "modern library",
+    hidden: false
   },
   { 
     href: '/dashboard/library', 
@@ -55,15 +59,16 @@ export const navItems: NavItem[] = [
     label: 'Library',
     description: 'Search the digital library, reserve books, and access journals.',
     image: "https://picsum.photos/seed/course3/600/400",
-    imageHint: "students collaborating"
+    imageHint: "students collaborating",
+    hidden: false
   },
 ];
 
 export const adminNavItems: NavItem[] = [
-  { href: '/dashboard/analytics', icon: LineChart, label: 'Analytics' },
-  { href: '/dashboard/users', icon: UsersIcon, label: 'Users' },
-  { href: '/dashboard/audit-logs', icon: Shield, label: 'Audit Logs' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
+  { href: '/dashboard/analytics', icon: LineChart, label: 'Analytics', hidden: false },
+  { href: '/dashboard/users', icon: UsersIcon, label: 'Users', hidden: false },
+  { href: '/dashboard/audit-logs', icon: Shield, label: 'Audit Logs', hidden: false },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings', hidden: false },
 ]
 
 export const notifications = [

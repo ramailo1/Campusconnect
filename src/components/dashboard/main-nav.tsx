@@ -10,18 +10,21 @@ import type { NavItem } from "@/lib/data"
 
 export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname()
-  const NavLink = ({ item }: { item: NavItem }) => (
-    <Link
-      href={item.href}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-        (pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')) && "bg-primary/10 text-primary"
-      )}
-    >
-      <item.icon className="h-4 w-4" />
-      {item.label}
-    </Link>
-  )
+  const NavLink = ({ item }: { item: NavItem }) => {
+    if (item.hidden) return null;
+    return (
+        <Link
+        href={item.href}
+        className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+            (pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')) && "bg-primary/10 text-primary"
+        )}
+        >
+        <item.icon className="h-4 w-4" />
+        {item.label}
+        </Link>
+    )
+  }
 
   return (
     <nav className={cn(

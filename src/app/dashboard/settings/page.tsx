@@ -38,8 +38,8 @@ export default function SettingsPage() {
     const [roles, setRoles] = useState<Role[]>(defaultRoles)
     const [newRoleName, setNewRoleName] = useState("")
 
-    const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400" })
-    const [newAdminNavItem, setNewAdminNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
+    const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400", hidden: false })
+    const [newAdminNavItem, setNewAdminNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0], hidden: false })
     
     const [courseFormText, setCourseFormText] = useState({
         title: "Add New Course",
@@ -87,13 +87,13 @@ export default function SettingsPage() {
     });
 
 
-    const handleNavItemChange = (index: number, field: keyof NavItem, value: string) => {
+    const handleNavItemChange = (index: number, field: keyof NavItem, value: string | boolean) => {
         const newItems = [...navItems];
         (newItems[index] as any)[field] = value;
         setNavItems(newItems);
     };
 
-    const handleAdminNavItemChange = (index: number, field: keyof NavItem, value: string) => {
+    const handleAdminNavItemChange = (index: number, field: keyof NavItem, value: string | boolean) => {
         const newItems = [...adminNavItems];
         (newItems[index] as any)[field] = value;
         setAdminNavItems(newItems);
@@ -118,10 +118,10 @@ export default function SettingsPage() {
 
         if (isAdmin) {
             setAdminNavItems([...adminNavItems, newItem])
-            setNewAdminNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0] })
+            setNewAdminNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0], hidden: false })
         } else {
             setNavItems([...navItems, newItem as NavItem])
-            setNewNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400" })
+            setNewNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400", hidden: false })
         }
     }
 
@@ -244,6 +244,17 @@ export default function SettingsPage() {
                                     <CardContent className="grid gap-4">
                                         {navItems.map((item, index) => (
                                             <div key={index} className="flex flex-col gap-2 p-4 border rounded-md">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h4 className="font-medium">{item.label || "New Item"}</h4>
+                                                    <div className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`nav-item-hidden-${index}`}
+                                                            checked={item.hidden}
+                                                            onCheckedChange={(checked) => handleNavItemChange(index, 'hidden', !!checked)}
+                                                        />
+                                                        <Label htmlFor={`nav-item-hidden-${index}`}>Hide</Label>
+                                                    </div>
+                                                </div>
                                                 <div className="flex items-end gap-2">
                                                     <div className="grid gap-2 flex-1">
                                                         <Label htmlFor={`nav-item-label-${index}`}>Label</Label>
@@ -309,26 +320,39 @@ export default function SettingsPage() {
                                     </CardHeader>
                                     <CardContent className="grid gap-4">
                                         {adminNavItems.map((item, index) => (
-                                            <div key={index} className="flex items-end gap-2">
-                                                <div className="grid gap-2 flex-1">
-                                                    <Label htmlFor={`admin-nav-item-label-${index}`}>Label</Label>
-                                                    <Input
-                                                        id={`admin-nav-item-label-${index}`}
-                                                        value={item.label}
-                                                        onChange={(e) => handleAdminNavItemChange(index, 'label', e.target.value)}
-                                                    />
+                                            <div key={index} className="flex flex-col gap-2 p-4 border rounded-md">
+                                                <div className="flex items-center justify-between mb-2">
+                                                     <h4 className="font-medium">{item.label || "New Item"}</h4>
+                                                    <div className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`admin-nav-item-hidden-${index}`}
+                                                            checked={item.hidden}
+                                                            onCheckedChange={(checked) => handleAdminNavItemChange(index, 'hidden', !!checked)}
+                                                        />
+                                                        <Label htmlFor={`admin-nav-item-hidden-${index}`}>Hide</Label>
+                                                    </div>
                                                 </div>
-                                                <div className="grid gap-2 flex-1">
-                                                    <Label htmlFor={`admin-nav-item-path-${index}`}>Path</Label>
-                                                    <Input
-                                                        id={`admin-nav-item-path-${index}`}
-                                                        value={item.href}
-                                                        onChange={(e) => handleAdminNavItemChange(index, 'href', e.target.value)}
-                                                    />
+                                                <div className="flex items-end gap-2">
+                                                    <div className="grid gap-2 flex-1">
+                                                        <Label htmlFor={`admin-nav-item-label-${index}`}>Label</Label>
+                                                        <Input
+                                                            id={`admin-nav-item-label-${index}`}
+                                                            value={item.label}
+                                                            onChange={(e) => handleAdminNavItemChange(index, 'label', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="grid gap-2 flex-1">
+                                                        <Label htmlFor={`admin-nav-item-path-${index}`}>Path</Label>
+                                                        <Input
+                                                            id={`admin-nav-item-path-${index}`}
+                                                            value={item.href}
+                                                            onChange={(e) => handleAdminNavItemChange(index, 'href', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <Button variant="outline" size="icon" onClick={() => handleRemoveNavItem(index, true)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
-                                                <Button variant="outline" size="icon" onClick={() => handleRemoveNavItem(index, true)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
                                             </div>
                                         ))}
                                         <div className="border p-4 rounded-md mt-4 grid gap-4">

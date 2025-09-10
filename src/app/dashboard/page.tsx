@@ -20,7 +20,7 @@ import { useMemo, useState, useEffect } from "react"
 
 
 export default function Dashboard() {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState<Date | null>(null)
   const [dashboardSettings, setDashboardSettings] = useState({
     metrics: ["total-visitors", "borrowed-books", "overdue-books", "new-members"],
     sections: ["users-list", "books-list", "top-choices"],
@@ -43,6 +43,7 @@ export default function Dashboard() {
 
 
   useEffect(() => {
+    setCurrentDate(new Date());
     const timer = setInterval(() => {
       setCurrentDate(new Date())
     }, 60000) // Update every minute
@@ -98,7 +99,9 @@ export default function Dashboard() {
     <>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">{dashboardText.greeting}, {currentUser.name.split(' ')[0]}!</h1>
-        <p className="text-muted-foreground">{format(currentDate, "EEEE, MMMM d, yyyy | h:mm a")}</p>
+        <p className="text-muted-foreground">
+            {currentDate ? format(currentDate, "EEEE, MMMM d, yyyy | h:mm a") : '...'}
+        </p>
       </div>
       
        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">

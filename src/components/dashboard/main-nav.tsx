@@ -15,9 +15,8 @@ export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
     if (item.hidden) return null;
     return (
       <SidebarMenuItem>
-          <Link href={item.href} legacyBehavior passHref>
+          <Link href={item.href}>
             <SidebarMenuButton
-              as="a"
               isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')}
               tooltip={item.label}
               className="justify-start"

@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "course-1",
+      "description": "Abstract geometric patterns",
+      "imageUrl": "https://picsum.photos/seed/course1/600/400",
+      "imageHint": "abstract geometry"
+    },
+    {
+      "id": "course-2",
+      "description": "Modern university library",
+      "imageUrl": "https://picsum.photos/seed/course2/600/400",
+      "imageHint": "modern library"
+    },
+    {
+      "id": "course-3",
+      "description": "Students collaborating on a project",
+      "imageUrl": "https://picsum.photos/seed/course3/600/400",
+      "imageHint": "students collaborating"
+    },
+    {
+      "id": "avatar-1",
+      "description": "User avatar",
+      "imageUrl": "https://picsum.photos/seed/avatar1/100/100",
+      "imageHint": "person portrait"
+    }
+  ]
 }

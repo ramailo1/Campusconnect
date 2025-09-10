@@ -8,9 +8,8 @@ From navigation to UI text, everything can be **configured through a powerful ad
 
 ## 📸 Screenshots
 
-![Login Page](https://storage.googleapis.com/aifirebase/images/campus-connect-login.png "Login Page")  
-![Dashboard](https://storage.googleapis.com/aifirebase/images/campus-connect-dashboard.png "Dashboard")  
-![Dashboard (Dark Mode)](https://storage.googleapis.com/aifirebase/images/campus-connect-dashboard-dark.png "Dashboard (Dark Mode)")  
+![Login Page](<img width="842" height="799" alt="image" src="https://github.com/user-attachments/assets/1e1188f2-fdac-49ca-a380-2894335fc655" />)  
+![Dashboard](<img width="1698" height="1149" alt="image" src="https://github.com/user-attachments/assets/706258ce-bd13-44cd-8779-baff2450dabd" />)  
 
 ---
 

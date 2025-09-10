@@ -22,8 +22,10 @@ export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
             tooltip={item.label}
           >
             <Link href={item.href}>
-              <item.icon />
-              <span>{item.label}</span>
+              <>
+                <item.icon />
+                <span>{item.label}</span>
+              </>
             </Link>
           </SidebarMenuButton>
       </SidebarMenuItem>

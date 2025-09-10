@@ -66,6 +66,21 @@ export default function SettingsPage() {
         coverImagePlaceholder: "https://...",
         buttonText: "Add Book"
     });
+    
+    const [appointmentFormText, setAppointmentFormText] = useState({
+        title: "Schedule an Appointment",
+        description: "Book a new appointment.",
+        studentLabel: "Student",
+        studentPlaceholder: "Select a student",
+        advisorLabel: "Advisor",
+        advisorPlaceholder: "Select an advisor",
+        dateLabel: "Date",
+        timeLabel: "Available Times",
+        timePlaceholder: "Select a time slot",
+        notesLabel: "Notes (Optional)",
+        notesPlaceholder: "e.g. Discussing fall semester schedule",
+        buttonText: "Schedule Appointment"
+    })
 
     const [dashboardSettings, setDashboardSettings] = useState({
         metrics: ["total-visitors", "borrowed-books", "overdue-books", "new-members"],
@@ -130,6 +145,11 @@ export default function SettingsPage() {
         if (savedPlatformName) {
             setPlatformName(savedPlatformName);
         }
+        const savedAppointmentFormText = localStorage.getItem("appointmentFormText");
+        if (savedAppointmentFormText) {
+            setAppointmentFormText(JSON.parse(savedAppointmentFormText));
+        }
+
     }, []);
 
 
@@ -253,6 +273,8 @@ export default function SettingsPage() {
         localStorage.setItem("dashboardText", JSON.stringify(dashboardText))
         localStorage.setItem("sidebarBehavior", sidebarBehavior)
         localStorage.setItem("platformName", platformName)
+        localStorage.setItem("appointmentFormText", JSON.stringify(appointmentFormText))
+
 
         toast({
             title: "Settings Saved",
@@ -670,6 +692,21 @@ export default function SettingsPage() {
                                                 </div>
                                             </AccordionContent>
                                         </AccordionItem>
+                                        <AccordionItem value="appointment-form">
+                                            <AccordionTrigger>Appointment Form</AccordionTrigger>
+                                            <AccordionContent className="p-4 grid gap-4">
+                                                {Object.keys(appointmentFormText).map(key => (
+                                                    <div className="grid gap-2" key={key}>
+                                                        <Label htmlFor={`appt-${key}`} className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                                                        <Input
+                                                            id={`appt-${key}`}
+                                                            value={appointmentFormText[key as keyof typeof appointmentFormText]}
+                                                            onChange={(e) => setAppointmentFormText({ ...appointmentFormText, [key]: e.target.value })}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </AccordionContent>
+                                        </AccordionItem>
                                     </Accordion>
                                 </CardContent>
                             </Card>
@@ -752,3 +789,5 @@ export default function SettingsPage() {
 
     
 }
+
+    

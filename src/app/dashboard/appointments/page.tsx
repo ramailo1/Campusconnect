@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -47,6 +47,27 @@ export default function AppointmentsPage() {
     const [availability, setAvailability] = useState<AvailabilitySlot[]>(allAvailabilitySlots)
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+    const [appointmentFormText, setAppointmentFormText] = useState({
+        title: "Schedule an Appointment",
+        description: "Book a new appointment.",
+        studentLabel: "Student",
+        studentPlaceholder: "Select a student",
+        advisorLabel: "Advisor",
+        advisorPlaceholder: "Select an advisor",
+        dateLabel: "Date",
+        timeLabel: "Available Times",
+        timePlaceholder: "Select a time slot",
+        notesLabel: "Notes (Optional)",
+        notesPlaceholder: "e.g. Discussing fall semester schedule",
+        buttonText: "Schedule Appointment"
+    })
+
+    useEffect(() => {
+        const savedText = localStorage.getItem("appointmentFormText");
+        if (savedText) {
+            setAppointmentFormText(JSON.parse(savedText));
+        }
+    }, []);
 
     const currentUserRole = defaultRoles.find(role => role.id === currentUser.role)
     const canManageAvailability = currentUserRole?.permissions.includes('manage-availability')
@@ -233,19 +254,19 @@ export default function AppointmentsPage() {
                         {canScheduleAppointments && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>Schedule an Appointment</CardTitle>
+                                <CardTitle>{appointmentFormText.title}</CardTitle>
                                 <CardDescription>
-                                    Book a new appointment.
+                                    {appointmentFormText.description}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={handleScheduleSubmit} className="grid gap-6">
                                      {currentUser.role === 'admin' && (
                                         <div className="grid gap-3">
-                                            <Label htmlFor="student">Student</Label>
+                                            <Label htmlFor="student">{appointmentFormText.studentLabel}</Label>
                                             <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a student" />
+                                                    <SelectValue placeholder={appointmentFormText.studentPlaceholder} />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {students.map(student => (
@@ -257,10 +278,10 @@ export default function AppointmentsPage() {
                                     )}
 
                                     <div className="grid gap-3">
-                                        <Label htmlFor="advisor">Advisor</Label>
+                                        <Label htmlFor="advisor">{appointmentFormText.advisorLabel}</Label>
                                         <Select value={selectedAdvisorId} onValueChange={setSelectedAdvisorId}>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select an advisor" />
+                                                <SelectValue placeholder={appointmentFormText.advisorPlaceholder} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {advisors.map(advisor => (
@@ -271,7 +292,7 @@ export default function AppointmentsPage() {
                                     </div>
 
                                     <div className="grid gap-3">
-                                        <Label htmlFor="appointment-date">Date</Label>
+                                        <Label htmlFor="appointment-date">{appointmentFormText.dateLabel}</Label>
                                         <Input 
                                             id="appointment-date" 
                                             type="date"
@@ -283,10 +304,10 @@ export default function AppointmentsPage() {
                                     
                                     {selectedAdvisorId && selectedBookingDate && (
                                     <div className="grid gap-3">
-                                        <Label htmlFor="appointment-time">Available Times</Label>
+                                        <Label htmlFor="appointment-time">{appointmentFormText.timeLabel}</Label>
                                         <Select name="time">
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a time slot" />
+                                                <SelectValue placeholder={appointmentFormText.timePlaceholder} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {availableBookingSlots.length > 0 ? (
@@ -302,15 +323,15 @@ export default function AppointmentsPage() {
                                     )}
 
                                     <div className="grid gap-3">
-                                        <Label htmlFor="notes">Notes (Optional)</Label>
+                                        <Label htmlFor="notes">{appointmentFormText.notesLabel}</Label>
                                         <Textarea
                                             id="notes"
                                             name="notes"
-                                            placeholder="e.g. Discussing fall semester schedule"
+                                            placeholder={appointmentFormText.notesPlaceholder}
                                             className="min-h-24"
                                         />
                                     </div>
-                                    <Button type="submit" className="w-fit">Schedule Appointment</Button>
+                                    <Button type="submit" className="w-fit">{appointmentFormText.buttonText}</Button>
                                 </form>
                             </CardContent>
                         </Card>
@@ -440,3 +461,5 @@ export default function AppointmentsPage() {
         </>
     )
 }
+
+    

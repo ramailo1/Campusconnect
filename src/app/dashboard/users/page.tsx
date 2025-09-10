@@ -1,5 +1,7 @@
+
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -18,14 +20,49 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { users as allUsers } from "@/lib/data"
+import type { User } from "@/lib/data"
 import { defaultRoles } from "@/lib/roles"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+
 
 export default function UsersPage() {
+    const [users, setUsers] = useState<User[]>(allUsers)
+    const [editingUser, setEditingUser] = useState<User | null>(null)
+
+    const handleOpenEditDialog = (user: User) => {
+        setEditingUser(user);
+    };
+
+    const handleCloseEditDialog = () => {
+        setEditingUser(null);
+    };
+
+    const handleUpdateUser = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!editingUser) return;
+
+        const formData = new FormData(e.currentTarget);
+        const updatedUser: User = {
+            ...editingUser,
+            name: formData.get("name") as string,
+            email: formData.get("email") as string,
+            role: formData.get("role") as 'student' | 'faculty' | 'admin',
+        };
+
+        setUsers(users.map(u => u.id === editingUser.id ? updatedUser : u));
+        handleCloseEditDialog();
+    };
+
+    const handleDeleteUser = (userId: string) => {
+        setUsers(users.filter(u => u.id !== userId));
+    };
+
     return (
+        <>
         <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3">
              <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
                  <Card>
@@ -46,7 +83,7 @@ export default function UsersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {allUsers.map(user => (
+                                {users.map(user => (
                                     <TableRow key={user.id}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
@@ -63,8 +100,8 @@ export default function UsersPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleOpenEditDialog(user)}>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleDeleteUser(user.id)}>Delete</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -120,5 +157,56 @@ export default function UsersPage() {
                 </CardContent>
             </Card>
         </div>
+        {editingUser && (
+        <Dialog open={!!editingUser} onOpenChange={(isOpen) => !isOpen && handleCloseEditDialog()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Update the details for {editingUser.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdateUser} className="grid gap-6 py-4">
+              <div className="grid gap-3">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  defaultValue={editingUser.name}
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  name="email"
+                  type="email"
+                  defaultValue={editingUser.email}
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="edit-role">Role</Label>
+                 <Select name="role" defaultValue={editingUser.role}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {defaultRoles.map(role => (
+                            <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleCloseEditDialog}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+      </>
     )
 }

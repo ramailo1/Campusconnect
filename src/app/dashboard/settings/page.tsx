@@ -309,7 +309,7 @@ export default function SettingsPage() {
                     <CardDescription>Manage system-wide settings like navigation, roles, and UI text.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Tabs defaultValue="navigation" className="w-full">
+                    <Tabs defaultValue="roles" className="w-full">
                         <TabsList className="grid w-full grid-cols-5">
                             <TabsTrigger value="navigation">Navigation</TabsTrigger>
                             <TabsTrigger value="roles">Roles &amp; Permissions</TabsTrigger>
@@ -480,7 +480,8 @@ export default function SettingsPage() {
                                                         <Input 
                                                             value={role.name} 
                                                             onChange={(e) => handleRoleChange(roleIndex, { name: e.target.value })} 
-                                                            className="font-semibold text-lg" 
+                                                            className="font-semibold text-lg"
+                                                            onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
                                                 </AccordionTrigger>
@@ -501,7 +502,7 @@ export default function SettingsPage() {
                                                         ))}
                                                     </div>
                                                     <Button variant="destructive" size="sm" onClick={() => handleRemoveRole(roleIndex)} className="mt-6">
-                                                        <Trash2 className="mr-2" /> Remove Role
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Remove Role
                                                     </Button>
                                                 </AccordionContent>
                                             </AccordionItem>
@@ -516,7 +517,7 @@ export default function SettingsPage() {
                                                 placeholder="Enter new role name"
                                             />
                                             <Button onClick={handleAddRole}>
-                                                <PlusCircle className="mr-2"/> Add Role
+                                                <PlusCircle className="mr-2 h-4 w-4"/> Add Role
                                             </Button>
                                         </div>
                                     </div>
@@ -789,5 +790,3 @@ export default function SettingsPage() {
 
     
 }
-
-    

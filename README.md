@@ -6,6 +6,7 @@ This project is a comprehensive, customizable campus management system built wit
 
 ![Login Page](https://storage.googleapis.com/aifirebase/images/campus-connect-login.png "Login Page")
 ![Dashboard](https://storage.googleapis.com/aifirebase/images/campus-connect-dashboard.png "Dashboard")
+![Dashboard (Dark Mode)](https://storage.googleapis.com/aifirebase/images/campus-connect-dashboard-dark.png "Dashboard (Dark Mode)")
 
 ## Features
 

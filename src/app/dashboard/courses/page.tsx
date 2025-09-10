@@ -19,10 +19,12 @@ import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
 import type { Course } from "@/lib/data"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>(allCourses)
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   
   const isStudent = currentUser.role === 'student'
   const isFaculty = currentUser.role === 'faculty'
@@ -46,12 +48,41 @@ export default function CoursesPage() {
     )
   }
 
+  const handleOpenEditDialog = (course: Course) => {
+    setEditingCourse(course)
+  }
+
+  const handleCloseEditDialog = () => {
+    setEditingCourse(null)
+  }
+
+  const handleUpdateCourse = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingCourse) return;
+
+    const formData = new FormData(e.currentTarget);
+    const updatedCourse: Course = {
+      ...editingCourse,
+      name: formData.get("course-name") as string,
+      code: formData.get("course-code") as string,
+      description: formData.get("description") as string,
+    };
+
+    setCourses(courses.map(c => c.code === editingCourse.code ? updatedCourse : c));
+    handleCloseEditDialog();
+  }
+  
+  const handleDeleteCourse = (courseCode: string) => {
+    setCourses(courses.filter(c => c.code !== courseCode));
+  }
+
   const displayedCourses = isFaculty
     ? courses.filter(course => course.instructor === currentUser.name)
     : courses
 
 
   return (
+    <>
     <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3">
       <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
         <Card>
@@ -113,8 +144,8 @@ export default function CoursesPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>Delete</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenEditDialog(course)}>Edit</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteCourse(course.code)}>Delete</DropdownMenuItem>
                               </DropdownMenuContent>
                           </DropdownMenu>
                         )}
@@ -169,5 +200,51 @@ export default function CoursesPage() {
         </Card>
       )}
     </div>
+     {editingCourse && (
+        <Dialog open={!!editingCourse} onOpenChange={(isOpen) => !isOpen && handleCloseEditDialog()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Course</DialogTitle>
+              <DialogDescription>
+                Update the details for {editingCourse.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdateCourse} className="grid gap-6 py-4">
+              <div className="grid gap-3">
+                <Label htmlFor="edit-course-name">Course Name</Label>
+                <Input
+                  id="edit-course-name"
+                  name="course-name"
+                  defaultValue={editingCourse.name}
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="edit-course-code">Course Code</Label>
+                <Input
+                  id="edit-course-code"
+                  name="course-code"
+                  defaultValue={editingCourse.code}
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  name="description"
+                  defaultValue={editingCourse.description}
+                  className="min-h-32"
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleCloseEditDialog}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   )
 }

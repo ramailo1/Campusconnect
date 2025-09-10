@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -12,15 +10,6 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Bot, Sparkles, Loader2 } from 'lucide-react';
-import { summarizeLogs } from './actions';
 import type { AuditLog } from '@/lib/data';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -29,28 +18,6 @@ type AuditLogClientProps = {
 };
 
 export function AuditLogClient({ logs }: AuditLogClientProps) {
-  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-  const [summary, setSummary] = useState('');
-  const [potentialIssues, setPotentialIssues] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSummarize = async () => {
-    setIsSummaryOpen(true);
-    setIsLoading(true);
-    try {
-      const logsString = JSON.stringify(logs, null, 2);
-      const result = await summarizeLogs(logsString);
-      setSummary(result.summary);
-      setPotentialIssues(result.potentialIssues);
-    } catch (error) {
-      console.error(error);
-      setSummary('Failed to generate summary.');
-      setPotentialIssues('An error occurred.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const getBadgeVariant = (level: AuditLog['level']) => {
     switch (level) {
       case 'critical':
@@ -64,12 +31,6 @@ export function AuditLogClient({ logs }: AuditLogClientProps) {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <Button onClick={handleSummarize}>
-          <Sparkles className="mr-2 h-4 w-4" />
-          Summarize with AI
-        </Button>
-      </div>
       <div className="border shadow-sm rounded-lg">
         <Table>
           <TableHeader>
@@ -112,37 +73,6 @@ export function AuditLogClient({ logs }: AuditLogClientProps) {
           </TableBody>
         </Table>
       </div>
-
-      <Dialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Bot className="h-6 w-6" /> AI-Powered Audit Log Summary
-            </DialogTitle>
-            <DialogDescription>
-              An AI-generated summary of recent activities and potential issues.
-            </DialogDescription>
-          </DialogHeader>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-48">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <div className="grid gap-4 py-4 text-sm">
-              <div>
-                <h3 className="font-semibold mb-2">Summary of Activities</h3>
-                <p className="text-muted-foreground">{summary}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2 text-destructive">
-                  Potential Security Issues
-                </h3>
-                <p className="text-muted-foreground">{potentialIssues}</p>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

@@ -11,7 +11,6 @@ This project is a comprehensive, customizable campus management system built wit
 - **Digital Library**: A digital library where users can browse, borrow, and return books.
 - **User Management**: Admins can add, edit, and remove users from the system.
 - **Analytics Dashboard**: A dedicated page with charts and stats on platform usage, user demographics, and course enrollment.
-- **AI-Powered Log Analysis**: Utilizes AI to summarize audit logs and identify potential security issues.
 - **Full UI Customization**: Admins can change nearly all user-facing text, including form labels, button text, and page titles, directly from the settings panel.
 - **Customizable Navigation**: The main and admin navigation menus can be fully customized, allowing admins to add, remove, rename, and hide menu items.
 
@@ -21,7 +20,6 @@ This project is a comprehensive, customizable campus management system built wit
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
-- **AI Integration**: [Genkit](https://firebase.google.com/docs/genkit)
 - **Charts**: [Recharts](https://recharts.org/)
 
 ## Getting Started
@@ -46,10 +44,11 @@ Follow these steps to get the project running on your local machine.
     npm install
     ```
 
-3.  **Set up environment variables:**
-    Create a `.env` file in the root of the project and add any necessary environment variables (e.g., for Genkit API keys).
+3.  **Set up environment variables (Optional):**
+    If you plan to add services that require API keys, you can create a `.env` file in the root of the project.
     ```
-    GEMINI_API_KEY=your_api_key_here
+    # Example
+    # SERVICE_API_KEY=your_api_key_here
     ```
 
 ### Running the Development Server
@@ -61,12 +60,6 @@ npm run dev
 ```
 
 This will start the Next.js development server, typically on `http://localhost:9002`.
-
-The application also uses Genkit for AI features. To run the Genkit flows locally, use a separate terminal window:
-
-```bash
-npm run genkit:dev
-```
 
 ## Configuration
 

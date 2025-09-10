@@ -50,10 +50,17 @@ Follow these steps to get the project running on your local machine.
     npm install
     ```
 
-3.  **Set up environment variables (Optional):**
-    If you plan to add services that require API keys, you can create a `.env` file in the root of the project.
+3.  **Set up environment variables:**
+    Create a `.env` file in the root of the project by copying the example format. This file is used for sensitive information like database connection strings and API keys.
+
     ```
-    # Example
+    # .env
+
+    # Database connection URL (e.g., PostgreSQL)
+    # Replace with your actual database connection string
+    DATABASE_URL="postgresql://user:password@host:port/database"
+
+    # Other API keys
     # SERVICE_API_KEY=your_api_key_here
     ```
 

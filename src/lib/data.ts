@@ -173,3 +173,22 @@ export const appointments: Appointment[] = [
     { id: 'appt-2', studentId: 'user-5', advisorId: 'user-3', date: new Date(Date.now() + 86400000 * 3).toISOString(), status: 'Confirmed', notes: 'Thesis check-in' },
     { id: 'appt-3', studentId: 'user-4', advisorId: 'user-3', date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'Pending', notes: 'Career advice' },
 ]
+
+export type Book = {
+    id: string;
+    title: string;
+    author: string;
+    coverImage: string;
+    borrowedBy: string | null;
+}
+
+export const libraryBooks: Book[] = [
+  { id: 'book-1', title: "The Digital Fortress", author: "Dan Brown", coverImage: "https://picsum.photos/seed/book1/400/600", borrowedBy: null },
+  { id: 'book-2', title: "Structure and Interpretation of Computer Programs", author: "Harold Abelson", coverImage: "https://picsum.photos/seed/book2/400/600", borrowedBy: 'user-4' },
+  { id: 'book-3', title: "The Pragmatic Programmer", author: "Andrew Hunt", coverImage: "https://picsum.photos/seed/book3/400/600", borrowedBy: null },
+  { id: 'book-4', title: "Clean Code: A Handbook of Agile Software Craftsmanship", author: "Robert C. Martin", coverImage: "https://picsum.photos/seed/book4/400/600", borrowedBy: null },
+  { id: 'book-5', title: "Design Patterns: Elements of Reusable Object-Oriented Software", author: "Erich Gamma", coverImage: "https://picsum.photos/seed/book5/400/600", borrowedBy: 'user-5' },
+  { id: 'book-6', title: "The Lord of the Rings", author: "J.R.R. Tolkien", coverImage: "https://picsum.photos/seed/book6/400/600", borrowedBy: null },
+  { id: 'book-7', title: "Dune", author: "Frank Herbert", coverImage: "https://picsum.photos/seed/book7/400/600", borrowedBy: null },
+  { id: 'book-8', title: "Foundation", author: "Isaac Asimov", coverImage: "https://picsum.photos/seed/book8/400/600", borrowedBy: null },
+]

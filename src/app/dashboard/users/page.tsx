@@ -103,7 +103,7 @@ export default function UsersPage() {
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>
-                                            <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>{getRoleName(user.role)}</Badge>
+                                            <Badge variant={getRoleName(user.role) === 'Super Admin' ? 'destructive' : 'secondary'}>{getRoleName(user.role)}</Badge>
                                         </TableCell>
                                         <TableCell>
                                              <DropdownMenu>

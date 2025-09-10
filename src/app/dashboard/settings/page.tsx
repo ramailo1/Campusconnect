@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -502,7 +501,7 @@ export default function SettingsPage() {
                                                             <div key={permission} className="flex items-center space-x-2">
                                                                 <Checkbox
                                                                     id={`${role.id}-${permission}`}
-                                                                    checked={role.permissions.includes(permission)}
+                                                                    checked={(role.permissions || []).includes(permission)}
                                                                     onCheckedChange={(checked) => handlePermissionChange(roleIndex, permission, !!checked)}
                                                                 />
                                                                 <Label htmlFor={`${role.id}-${permission}`} className="font-normal">

@@ -26,6 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import type { NavItem } from "@/lib/data"
 import { defaultRoles, permissionLabels } from "@/lib/roles"
 import type { Role, Permission } from "@/lib/roles"
+import { Textarea } from "@/components/ui/textarea"
 
 
 export default function SettingsPage() {
@@ -37,6 +38,30 @@ export default function SettingsPage() {
 
     const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
     const [newAdminNavItem, setNewAdminNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
+    
+    const [courseFormText, setCourseFormText] = useState({
+        title: "Add New Course",
+        description: "Fill out the form below to add a new course to the catalog.",
+        nameLabel: "Course Name",
+        namePlaceholder: "e.g. Introduction to Computer Science",
+        codeLabel: "Course Code",
+        codePlaceholder: "e.g. CS101",
+        descriptionLabel: "Description",
+        descriptionPlaceholder: "A comprehensive introduction to the fundamental concepts of computer science...",
+        buttonText: "Save Course"
+    });
+    
+    const [bookFormText, setBookFormText] = useState({
+        title: "Add New Book",
+        description: "Add a new book to the library catalog.",
+        titleLabel: "Title",
+        titlePlaceholder: "Book Title",
+        authorLabel: "Author",
+        authorPlaceholder: "Author Name",
+        coverImageLabel: "Cover Image URL",
+        coverImagePlaceholder: "https://...",
+        buttonText: "Add Book"
+    });
 
 
     const handleNavItemChange = (index: number, field: keyof NavItem, value: string) => {
@@ -303,6 +328,104 @@ export default function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>UI Text Customization</CardTitle>
+                            <CardDescription>Customize labels and placeholders for forms.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-6">
+                            <Accordion type="multiple" className="w-full">
+                                <AccordionItem value="add-course-form">
+                                    <AccordionTrigger>Add New Course Form</AccordionTrigger>
+                                    <AccordionContent className="p-4 grid gap-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="course-title">Form Title</Label>
+                                            <Input id="course-title" value={courseFormText.title} onChange={(e) => setCourseFormText({...courseFormText, title: e.target.value})} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="course-description">Form Description</Label>
+                                            <Input id="course-description" value={courseFormText.description} onChange={(e) => setCourseFormText({...courseFormText, description: e.target.value})} />
+                                        </div>
+                                         <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label>Name Label</Label>
+                                                <Input value={courseFormText.nameLabel} onChange={(e) => setCourseFormText({...courseFormText, nameLabel: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Name Placeholder</Label>
+                                                <Input value={courseFormText.namePlaceholder} onChange={(e) => setCourseFormText({...courseFormText, namePlaceholder: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Code Label</Label>
+                                                <Input value={courseFormText.codeLabel} onChange={(e) => setCourseFormText({...courseFormText, codeLabel: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Code Placeholder</Label>
+                                                <Input value={courseFormText.codePlaceholder} onChange={(e) => setCourseFormText({...courseFormText, codePlaceholder: e.target.value})} />
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Description Label</Label>
+                                            <Input value={courseFormText.descriptionLabel} onChange={(e) => setCourseFormText({...courseFormText, descriptionLabel: e.target.value})} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Description Placeholder</Label>
+                                            <Textarea value={courseFormText.descriptionPlaceholder} onChange={(e) => setCourseFormText({...courseFormText, descriptionPlaceholder: e.target.value})} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Button Text</Label>
+                                            <Input value={courseFormText.buttonText} onChange={(e) => setCourseFormText({...courseFormText, buttonText: e.target.value})} />
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="add-book-form">
+                                    <AccordionTrigger>Add New Book Form</AccordionTrigger>
+                                    <AccordionContent className="p-4 grid gap-4">
+                                        <div className="grid gap-2">
+                                            <Label>Form Title</Label>
+                                            <Input value={bookFormText.title} onChange={(e) => setBookFormText({...bookFormText, title: e.target.value})} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Form Description</Label>
+                                            <Input value={bookFormText.description} onChange={(e) => setBookFormText({...bookFormText, description: e.target.value})} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label>Title Label</Label>
+                                                <Input value={bookFormText.titleLabel} onChange={(e) => setBookFormText({...bookFormText, titleLabel: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Title Placeholder</Label>
+                                                <Input value={bookFormText.titlePlaceholder} onChange={(e) => setBookFormText({...bookFormText, titlePlaceholder: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Author Label</Label>
+                                                <Input value={bookFormText.authorLabel} onChange={(e) => setBookFormText({...bookFormText, authorLabel: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Author Placeholder</Label>
+                                                <Input value={bookFormText.authorPlaceholder} onChange={(e) => setBookFormText({...bookFormText, authorPlaceholder: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Cover Image Label</Label>
+                                                <Input value={bookFormText.coverImageLabel} onChange={(e) => setBookFormText({...bookFormText, coverImageLabel: e.target.value})} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label>Cover Image Placeholder</Label>
+                                                <Input value={bookFormText.coverImagePlaceholder} onChange={(e) => setBookFormText({...bookFormText, coverImagePlaceholder: e.target.value})} />
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Button Text</Label>
+                                            <Input value={bookFormText.buttonText} onChange={(e) => setBookFormText({...bookFormText, buttonText: e.target.value})} />
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </CardContent>
+                    </Card>
+
 
                     <Button onClick={handleSaveChanges} size="lg" className="w-fit">Save All Settings</Button>
                 </CardContent>

@@ -85,6 +85,31 @@ export default function SettingsPage() {
         },
         addUserButton: "Add New User"
     });
+    
+    const [loginPageText, setLoginPageText] = useState({
+        title: "Login",
+        description: "Enter your email below to login to your account",
+        emailLabel: "Email",
+        passwordLabel: "Password",
+        forgotPasswordLink: "Forgot your password?",
+        loginButton: "Login",
+        googleLoginButton: "Login with Google",
+        signupText: "Don't have an account?",
+        signupLink: "Sign up",
+    });
+
+    const [signupPageText, setSignupPageText] = useState({
+        title: "Sign Up",
+        description: "Enter your information to create an account",
+        profilePicLabel: "Optional: Add a profile picture",
+        firstNameLabel: "First name",
+        lastNameLabel: "Last name",
+        emailLabel: "Email",
+        passwordLabel: "Password",
+        createAccountButton: "Create an account",
+        signinText: "Already have an account?",
+        signinLink: "Sign in",
+    });
 
 
     const handleNavItemChange = (index: number, field: keyof NavItem, value: string | boolean) => {
@@ -477,6 +502,36 @@ export default function SettingsPage() {
                                                     <Label htmlFor="add-user-button">"Add New User" Button Text</Label>
                                                     <Input id="add-user-button" value={dashboardText.addUserButton} onChange={(e) => setDashboardText({...dashboardText, addUserButton: e.target.value})} />
                                                 </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                        <AccordionItem value="login-page">
+                                            <AccordionTrigger>Login Page</AccordionTrigger>
+                                            <AccordionContent className="p-4 grid gap-4">
+                                                {Object.keys(loginPageText).map(key => (
+                                                    <div className="grid gap-2" key={key}>
+                                                        <Label htmlFor={`login-${key}`} className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                                                        <Input
+                                                            id={`login-${key}`}
+                                                            value={loginPageText[key as keyof typeof loginPageText]}
+                                                            onChange={(e) => setLoginPageText({ ...loginPageText, [key]: e.target.value })}
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                        <AccordionItem value="signup-page">
+                                            <AccordionTrigger>Sign Up Page</AccordionTrigger>
+                                            <AccordionContent className="p-4 grid gap-4">
+                                                {Object.keys(signupPageText).map(key => (
+                                                     <div className="grid gap-2" key={key}>
+                                                        <Label htmlFor={`signup-${key}`} className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</Label>
+                                                        <Input
+                                                            id={`signup-${key}`}
+                                                            value={signupPageText[key as keyof typeof signupPageText]}
+                                                            onChange={(e) => setSignupPageText({ ...signupPageText, [key]: e.target.value })}
+                                                        />
+                                                    </div>
+                                                ))}
                                             </AccordionContent>
                                         </AccordionItem>
                                         <AccordionItem value="add-course-form">

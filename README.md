@@ -5,6 +5,7 @@ This project is a comprehensive, customizable campus management system built wit
 ## Screenshots
 
 ![Login Page](https://storage.googleapis.com/aifirebase/images/campus-connect-login.png "Login Page")
+![Dashboard](https://storage.googleapis.com/aifirebase/images/campus-connect-dashboard.png "Dashboard")
 
 ## Features
 

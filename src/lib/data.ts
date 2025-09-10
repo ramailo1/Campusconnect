@@ -169,9 +169,22 @@ export type Appointment = {
 }
 
 export const appointments: Appointment[] = [
-    { id: 'appt-1', studentId: 'user-4', advisorId: 'user-2', date: new Date(Date.now() + 86400000 * 2).toISOString(), status: 'Confirmed', notes: 'Discussing fall semester' },
-    { id: 'appt-2', studentId: 'user-5', advisorId: 'user-3', date: new Date(Date.now() + 86400000 * 3).toISOString(), status: 'Confirmed', notes: 'Thesis check-in' },
-    { id: 'appt-3', studentId: 'user-4', advisorId: 'user-3', date: new Date(Date.now() + 86400000 * 5).toISOString(), status: 'Pending', notes: 'Career advice' },
+    { id: 'appt-1', studentId: 'user-4', advisorId: 'user-2', date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), status: 'Confirmed', notes: 'Discussing fall semester' },
+    { id: 'appt-2', studentId: 'user-5', advisorId: 'user-3', date: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(), status: 'Confirmed', notes: 'Thesis check-in' },
+]
+
+export type AvailabilitySlot = {
+    id: string;
+    advisorId: string;
+    date: string; // YYYY-MM-DD
+    time: string; // HH:mm
+}
+
+export const availabilitySlots: AvailabilitySlot[] = [
+    { id: 'avail-1', advisorId: 'user-2', date: '2024-07-28', time: '10:00' },
+    { id: 'avail-2', advisorId: 'user-2', date: '2024-07-28', time: '11:00' },
+    { id: 'avail-3', advisorId: 'user-2', date: '2024-07-29', time: '14:00' },
+    { id: 'avail-4', advisorId: 'user-3', date: '2024-07-30', time: '09:00' },
 ]
 
 export type Book = {

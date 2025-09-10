@@ -10,6 +10,7 @@ export type Permission =
   | 'manage-users'
   | 'view-audit-logs'
   | 'manage-settings'
+  | 'manage-availability'
 
 export const permissionLabels: Record<Permission, string> = {
     'view-dashboard': 'View Dashboard',
@@ -22,6 +23,7 @@ export const permissionLabels: Record<Permission, string> = {
     'manage-users': 'Manage Users',
     'view-audit-logs': 'View Audit Logs',
     'manage-settings': 'Manage Settings',
+    'manage-availability': 'Manage Availability',
 }
 
 export type Role = {
@@ -43,6 +45,7 @@ export const defaultRoles: Role[] = [
       'manage-users',
       'view-audit-logs',
       'manage-settings',
+      'manage-availability',
     ],
   },
   {
@@ -53,6 +56,7 @@ export const defaultRoles: Role[] = [
       'manage-courses',
       'manage-appointments',
       'access-library',
+      'manage-availability',
     ],
   },
   {

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -20,27 +20,66 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { appointments as allAppointments, users, currentUser } from "@/lib/data"
-import type { Appointment } from "@/lib/data"
+import {
+    appointments as allAppointments,
+    users,
+    currentUser,
+    availabilitySlots as allAvailabilitySlots
+} from "@/lib/data"
+import type { Appointment, AvailabilitySlot, User } from "@/lib/data"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, Trash2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { format } from "date-fns"
+import { format, parse, startOfDay, addMinutes } from "date-fns"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calendar } from "@/components/ui/calendar"
+import { defaultRoles } from "@/lib/roles"
 
+const timeSlots = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+    "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00",
+];
 
 export default function AppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>(allAppointments)
+    const [availability, setAvailability] = useState<AvailabilitySlot[]>(allAvailabilitySlots)
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null)
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
-    const isAdmin = currentUser.role === 'admin'
-    const displayedAppointments = isAdmin 
-        ? appointments
-        : appointments.filter(appt => appt.advisorId === currentUser.id || appt.studentId === currentUser.id)
+    const currentUserRole = defaultRoles.find(role => role.id === currentUser.role)
+    const canManageAvailability = currentUserRole?.permissions.includes('manage-availability')
+
+    const displayedAppointments = (currentUser.role === 'admin' || currentUser.role === 'faculty')
+        ? appointments.filter(appt => appt.advisorId === currentUser.id)
+        : appointments.filter(appt => appt.studentId === currentUser.id)
+    
+    const myAvailability = useMemo(() => {
+        if (!selectedDate) return []
+        const dateStr = format(selectedDate, 'yyyy-MM-dd')
+        return availability.filter(slot => slot.advisorId === currentUser.id && slot.date === dateStr)
+    }, [availability, selectedDate, currentUser.id])
 
     const advisors = users.filter(u => u.role === 'faculty' || u.role === 'admin');
     const students = users.filter(u => u.role === 'student');
+
+    // State for the new appointment form
+    const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>("");
+    const [selectedBookingDate, setSelectedBookingDate] = useState<Date | undefined>();
+
+    const availableBookingSlots = useMemo(() => {
+        if (!selectedAdvisorId || !selectedBookingDate) return []
+        const dateStr = format(selectedBookingDate, 'yyyy-MM-dd')
+
+        const advisorAvailability = availability.filter(slot => slot.advisorId === selectedAdvisorId && slot.date === dateStr)
+        const bookedAppointments = appointments.filter(appt => appt.advisorId === selectedAdvisorId && format(new Date(appt.date), 'yyyy-MM-dd') === dateStr)
+        
+        return advisorAvailability.filter(availSlot => 
+            !bookedAppointments.some(bookedAppt => format(new Date(bookedAppt.date), 'HH:mm') === availSlot.time)
+        )
+    }, [selectedAdvisorId, selectedBookingDate, availability, appointments])
+
 
     const handleOpenEditDialog = (appointment: Appointment) => {
         setEditingAppointment(appointment)
@@ -67,199 +106,316 @@ export default function AppointmentsPage() {
         setAppointments(appointments.map(a => a.id === editingAppointment.id ? updatedAppointment : a));
         handleCloseEditDialog();
     }
-
-    const handleDeleteAppointment = (appointmentId: string) => {
+    
+    const handleCancelAppointment = (appointmentId: string) => {
         setAppointments(appointments.filter(a => a.id !== appointmentId));
+    }
+
+    const handleToggleAvailability = (time: string) => {
+        if (!selectedDate) return;
+        const dateStr = format(selectedDate, 'yyyy-MM-dd')
+        const existingSlot = myAvailability.find(slot => slot.time === time)
+
+        if (existingSlot) {
+            // Remove availability
+            setAvailability(availability.filter(slot => slot.id !== existingSlot.id))
+        } else {
+            // Add availability
+            const newSlot: AvailabilitySlot = {
+                id: `avail-${Date.now()}`,
+                advisorId: currentUser.id,
+                date: dateStr,
+                time: time
+            }
+            setAvailability([...availability, newSlot])
+        }
+    }
+    
+    const handleScheduleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const time = formData.get('time') as string;
+        
+        if (!selectedAdvisorId || !selectedBookingDate || !time) {
+            // Basic validation
+            return;
+        }
+
+        const date = startOfDay(selectedBookingDate);
+        const [hours, minutes] = time.split(':').map(Number);
+        const appointmentDateTime = addMinutes(addMinutes(date, minutes), hours * 60).toISOString();
+
+        const newAppointment: Appointment = {
+            id: `appt-${Date.now()}`,
+            studentId: currentUser.id,
+            advisorId: selectedAdvisorId,
+            date: appointmentDateTime,
+            status: 'Confirmed',
+            notes: formData.get('notes') as string,
+        };
+        setAppointments([newAppointment, ...appointments]);
+        // Reset form
+        setSelectedAdvisorId("");
+        setSelectedBookingDate(undefined);
     }
 
 
     return (
         <>
-        <div className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3">
-            <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>My Appointments</CardTitle>
-                        <CardDescription>
-                            A list of your upcoming and past appointments.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Advisor</TableHead>
-                                    <TableHead>Date & Time</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead><span className="sr-only">Actions</span></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {displayedAppointments.map(appt => {
-                                    const student = users.find(u => u.id === appt.studentId)
-                                    const advisor = users.find(u => u.id === appt.advisorId)
-                                    return (
-                                    <TableRow key={appt.id}>
-                                        <TableCell>{student?.name ?? 'Unknown'}</TableCell>
-                                        <TableCell>{advisor?.name ?? 'Unknown'}</TableCell>
-                                        <TableCell>{format(new Date(appt.date), "PPP 'at' p")}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={appt.status === 'Confirmed' ? 'default' : appt.status === 'Canceled' ? 'destructive' : 'secondary'}>{appt.status}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                    <span className="sr-only">Toggle menu</span>
-                                                </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => handleOpenEditDialog(appt)}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDeleteAppointment(appt.id)}>Cancel</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                )})}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Schedule a New Appointment</CardTitle>
-                    <CardDescription>
-                        Fill out the form to schedule a new appointment.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form className="grid gap-6">
-                        <div className="grid gap-3">
-                            <Label htmlFor="student-name">Student Name</Label>
-                            <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a student" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {students.map(student => (
-                                        <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+            <Tabs defaultValue="appointments" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="appointments">My Appointments</TabsTrigger>
+                    {canManageAvailability && <TabsTrigger value="availability">My Availability</TabsTrigger>}
+                </TabsList>
+                <TabsContent value="appointments">
+                    <div className="grid flex-1 items-start gap-4 p-4 sm:px-0 sm:py-4 md:gap-8 lg:grid-cols-3">
+                        <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Appointments</CardTitle>
+                                    <CardDescription>
+                                        A list of your upcoming and past appointments.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>{currentUser.role === 'student' ? 'Advisor' : 'Student'}</TableHead>
+                                                <TableHead>Date & Time</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Notes</TableHead>
+                                                <TableHead><span className="sr-only">Actions</span></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {displayedAppointments.map(appt => {
+                                                const student = users.find(u => u.id === appt.studentId)
+                                                const advisor = users.find(u => u.id === appt.advisorId)
+                                                return (
+                                                <TableRow key={appt.id}>
+                                                    <TableCell>{currentUser.role === 'student' ? advisor?.name : student?.name ?? 'Unknown'}</TableCell>
+                                                    <TableCell>{format(new Date(appt.date), "PPP 'at' p")}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={appt.status === 'Confirmed' ? 'default' : appt.status === 'Canceled' ? 'destructive' : 'secondary'}>{appt.status}</Badge>
+                                                    </TableCell>
+                                                    <TableCell className="max-w-[200px] truncate">{appt.notes}</TableCell>
+                                                    <TableCell>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                                <span className="sr-only">Toggle menu</span>
+                                                            </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={() => handleOpenEditDialog(appt)}>Edit</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleCancelAppointment(appt.id)}>Cancel</DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )})}
+                                        </TableBody>
+                                    </Table>
+                                    {displayedAppointments.length === 0 && (
+                                        <div className="text-center p-8 text-muted-foreground">No appointments to display.</div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-3">
-                                <Label htmlFor="appointment-date">Date</Label>
-                                <Input id="appointment-date" type="date" />
-                            </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="appointment-time">Time</Label>
-                                <Input id="appointment-time" type="time" />
-                            </div>
-                        </div>
-                        <div className="grid gap-3">
-                            <Label htmlFor="advisor">Advisor</Label>
-                            <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select an advisor" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {advisors.map(advisor => (
-                                         <SelectItem key={advisor.id} value={advisor.id}>{advisor.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        {currentUser.role === 'student' && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Schedule an Appointment</CardTitle>
+                                <CardDescription>
+                                    Book a new appointment with an advisor.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleScheduleSubmit} className="grid gap-6">
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="advisor">Advisor</Label>
+                                        <Select value={selectedAdvisorId} onValueChange={setSelectedAdvisorId}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select an advisor" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {advisors.map(advisor => (
+                                                    <SelectItem key={advisor.id} value={advisor.id}>{advisor.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="appointment-date">Date</Label>
+                                        <Input 
+                                            id="appointment-date" 
+                                            type="date"
+                                            value={selectedBookingDate ? format(selectedBookingDate, 'yyyy-MM-dd') : ''}
+                                            onChange={(e) => setSelectedBookingDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)}
+                                            min={format(new Date(), 'yyyy-MM-dd')}
+                                        />
+                                    </div>
+                                    
+                                    {selectedAdvisorId && selectedBookingDate && (
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="appointment-time">Available Times</Label>
+                                        <Select name="time">
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a time slot" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableBookingSlots.length > 0 ? (
+                                                    availableBookingSlots.map(slot => (
+                                                        <SelectItem key={slot.id} value={slot.time}>{slot.time}</SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <SelectItem value="no-slots" disabled>No available slots</SelectItem>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    )}
+
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="notes">Notes (Optional)</Label>
+                                        <Textarea
+                                            id="notes"
+                                            name="notes"
+                                            placeholder="e.g. Discussing fall semester schedule"
+                                            className="min-h-24"
+                                        />
+                                    </div>
+                                    <Button type="submit" className="w-fit">Schedule Appointment</Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                        )}
+                    </div>
+                </TabsContent>
+
+                {canManageAvailability && (
+                <TabsContent value="availability">
+                   <Card>
+                        <CardHeader>
+                            <CardTitle>Manage Your Availability</CardTitle>
+                            <CardDescription>Select a date to view and edit your available time slots for appointments.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    className="rounded-md border"
+                                />
+                            </div>
+                            <div className="grid gap-4">
+                                <h3 className="text-lg font-medium">
+                                    Available Slots for {selectedDate ? format(selectedDate, 'PPP') : '...'}
+                                </h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                {timeSlots.map(time => {
+                                    const isAvailable = myAvailability.some(slot => slot.time === time)
+                                    const isBooked = appointments.some(appt => 
+                                        appt.advisorId === currentUser.id &&
+                                        format(new Date(appt.date), 'yyyy-MM-dd') === (selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '') &&
+                                        format(new Date(appt.date), 'HH:mm') === time
+                                    )
+                                    return (
+                                        <Button 
+                                            key={time}
+                                            variant={isAvailable ? "default" : "outline"}
+                                            onClick={() => handleToggleAvailability(time)}
+                                            disabled={isBooked}
+                                            className={isBooked ? "bg-destructive text-destructive-foreground hover:bg-destructive" : ""}
+                                        >
+                                            {isBooked ? "Booked" : time}
+                                        </Button>
+                                    )
+                                })}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                )}
+            </Tabs>
+            {editingAppointment && (
+                <Dialog open={!!editingAppointment} onOpenChange={(isOpen) => !isOpen && handleCloseEditDialog()}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Appointment</DialogTitle>
+                      <DialogDescription>
+                        Update the details for the appointment.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleUpdateAppointment} className="grid gap-6 py-4">
+                      <div className="grid gap-3">
+                        <Label htmlFor="edit-student-id">Student</Label>
+                        <Select name="student-id" defaultValue={editingAppointment.studentId}>
+                          <SelectTrigger><SelectValue/></SelectTrigger>
+                          <SelectContent>
+                            {students.map(student => (
+                              <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-3">
+                        <Label htmlFor="edit-advisor-id">Advisor</Label>
+                        <Select name="advisor-id" defaultValue={editingAppointment.advisorId}>
+                          <SelectTrigger><SelectValue/></SelectTrigger>
+                          <SelectContent>
+                            {advisors.map(advisor => (
+                              <SelectItem key={advisor.id} value={advisor.id}>{advisor.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-3">
-                            <Label htmlFor="notes">Notes (Optional)</Label>
-                            <Textarea
-                                id="notes"
-                                placeholder="e.g. Discussing fall semester schedule"
-                                className="min-h-24"
-                            />
+                            <Label htmlFor="edit-date">Date</Label>
+                            <Input id="edit-date" name="date" type="date" defaultValue={format(new Date(editingAppointment.date), 'yyyy-MM-dd')} />
                         </div>
-                        <Button type="submit" className="w-fit">Schedule Appointment</Button>
+                        <div className="grid gap-3">
+                            <Label htmlFor="edit-time">Time</Label>
+                            <Input id="edit-time" name="time" type="time" defaultValue={format(new Date(editingAppointment.date), 'HH:mm')} />
+                        </div>
+                       </div>
+                       <div className="grid gap-3">
+                        <Label htmlFor="edit-status">Status</Label>
+                        <Select name="status" defaultValue={editingAppointment.status}>
+                          <SelectTrigger><SelectValue/></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Confirmed">Confirmed</SelectItem>
+                            <SelectItem value="Pending">Pending</SelectItem>
+                            <SelectItem value="Canceled">Canceled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-3">
+                        <Label htmlFor="edit-notes">Notes</Label>
+                        <Textarea
+                          id="edit-notes"
+                          name="notes"
+                          defaultValue={editingAppointment.notes}
+                          className="min-h-24"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={handleCloseEditDialog}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">Save Changes</Button>
+                      </DialogFooter>
                     </form>
-                </CardContent>
-            </Card>
-        </div>
-        {editingAppointment && (
-            <Dialog open={!!editingAppointment} onOpenChange={(isOpen) => !isOpen && handleCloseEditDialog()}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Appointment</DialogTitle>
-                  <DialogDescription>
-                    Update the details for the appointment.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleUpdateAppointment} className="grid gap-6 py-4">
-                  <div className="grid gap-3">
-                    <Label htmlFor="edit-student-id">Student</Label>
-                    <Select name="student-id" defaultValue={editingAppointment.studentId}>
-                      <SelectTrigger><SelectValue/></SelectTrigger>
-                      <SelectContent>
-                        {students.map(student => (
-                          <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="edit-advisor-id">Advisor</Label>
-                    <Select name="advisor-id" defaultValue={editingAppointment.advisorId}>
-                      <SelectTrigger><SelectValue/></SelectTrigger>
-                      <SelectContent>
-                        {advisors.map(advisor => (
-                          <SelectItem key={advisor.id} value={advisor.id}>{advisor.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-3">
-                        <Label htmlFor="edit-date">Date</Label>
-                        <Input id="edit-date" name="date" type="date" defaultValue={format(new Date(editingAppointment.date), 'yyyy-MM-dd')} />
-                    </div>
-                    <div className="grid gap-3">
-                        <Label htmlFor="edit-time">Time</Label>
-                        <Input id="edit-time" name="time" type="time" defaultValue={format(new Date(editingAppointment.date), 'HH:mm')} />
-                    </div>
-                   </div>
-                   <div className="grid gap-3">
-                    <Label htmlFor="edit-status">Status</Label>
-                    <Select name="status" defaultValue={editingAppointment.status}>
-                      <SelectTrigger><SelectValue/></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Confirmed">Confirmed</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Canceled">Canceled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="edit-notes">Notes</Label>
-                    <Textarea
-                      id="edit-notes"
-                      name="notes"
-                      defaultValue={editingAppointment.notes}
-                      className="min-h-24"
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={handleCloseEditDialog}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">Save Changes</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          )}
+                  </DialogContent>
+                </Dialog>
+              )}
         </>
     )
 }

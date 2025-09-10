@@ -72,30 +72,35 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
     const [behavior, setBehavior] = React.useState<"expanded" | "hover">("expanded");
+    const [isClient, setIsClient] = React.useState(false)
 
     React.useEffect(() => {
+        setIsClient(true)
         const savedBehavior = localStorage.getItem("sidebarBehavior") as "expanded" | "hover" | null;
         if (savedBehavior) {
             setBehavior(savedBehavior);
         }
     }, []);
 
-    const getInitialOpenState = () => {
-        if (behavior === 'hover') return false;
-        if (typeof window !== 'undefined') {
-            const cookieValue = document.cookie.split('; ').find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))?.split('=')[1];
-            if (cookieValue) {
-                return cookieValue === 'true';
-            }
+    const getInitialOpenState = React.useCallback(() => {
+        if (!isClient) return defaultOpen;
+        const savedBehavior = localStorage.getItem("sidebarBehavior") as "expanded" | "hover" | null;
+        if (savedBehavior === 'hover') return false;
+
+        const cookieValue = document.cookie.split('; ').find(row => row.startsWith(`${SIDEBAR_COOKIE_NAME}=`))?.split('=')[1];
+        if (cookieValue) {
+            return cookieValue === 'true';
         }
         return defaultOpen;
-    };
+    }, [defaultOpen, isClient]);
     
     const [_open, _setOpen] = React.useState(getInitialOpenState);
 
     React.useEffect(() => {
-        _setOpen(getInitialOpenState());
-    }, [behavior]);
+        if(isClient) {
+            _setOpen(getInitialOpenState());
+        }
+    }, [behavior, getInitialOpenState, isClient]);
 
     const open = openProp ?? _open
     const setOpen = React.useCallback(
@@ -160,6 +165,10 @@ const SidebarProvider = React.forwardRef<
       }),
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, behavior]
     )
+    
+    if (!isClient) {
+      return null;
+    }
 
     return (
       <SidebarContext.Provider value={contextValue}>
@@ -556,13 +565,13 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-accent hover:text-primary focus-visible:ring-2 active:bg-accent active:text-primary disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary data-[state=open]:hover:bg-accent data-[state=open]:hover:text-primary group-[[data-state=collapsed]]:justify-center group-[[data-state=collapsed]]:!size-8 group-[[data-state=collapsed]]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary data-[state=open]:hover:bg-accent data-[state=open]:hover:text-accent-foreground group-[[data-state=collapsed]]:justify-center group-[[data-state=collapsed]]:!size-8 group-[[data-state=collapsed]]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "hover:bg-accent hover:text-primary",
+        default: "hover:bg-accent hover:text-accent-foreground",
         outline:
-          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-accent hover:text-primary hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+          "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-accent hover:text-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
         default: "h-8 text-sm",

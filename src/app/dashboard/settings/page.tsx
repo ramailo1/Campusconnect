@@ -37,7 +37,7 @@ export default function SettingsPage() {
     const [roles, setRoles] = useState<Role[]>(defaultRoles)
     const [newRoleName, setNewRoleName] = useState("")
 
-    const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
+    const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400" })
     const [newAdminNavItem, setNewAdminNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
     
     const [courseFormText, setCourseFormText] = useState({
@@ -103,8 +103,8 @@ export default function SettingsPage() {
             setAdminNavItems([...adminNavItems, newItem])
             setNewAdminNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0] })
         } else {
-            setNavItems([...navItems, newItem])
-            setNewNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0] })
+            setNavItems([...navItems, newItem as NavItem])
+            setNewNavItem({ label: "", href: "", icon: Object.keys(iconMap)[0], image: "https://picsum.photos/seed/new-item/600/400" })
         }
     }
 
@@ -213,26 +213,36 @@ export default function SettingsPage() {
                                     </CardHeader>
                                     <CardContent className="grid gap-4">
                                         {navItems.map((item, index) => (
-                                            <div key={index} className="flex items-end gap-2">
-                                                <div className="grid gap-2 flex-1">
-                                                    <Label htmlFor={`nav-item-label-${index}`}>Label</Label>
+                                            <div key={index} className="flex flex-col gap-2 p-4 border rounded-md">
+                                                <div className="flex items-end gap-2">
+                                                    <div className="grid gap-2 flex-1">
+                                                        <Label htmlFor={`nav-item-label-${index}`}>Label</Label>
+                                                        <Input
+                                                            id={`nav-item-label-${index}`}
+                                                            value={item.label}
+                                                            onChange={(e) => handleNavItemChange(index, 'label', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="grid gap-2 flex-1">
+                                                        <Label htmlFor={`nav-item-path-${index}`}>Path</Label>
+                                                        <Input
+                                                            id={`nav-item-path-${index}`}
+                                                            value={item.href}
+                                                            onChange={(e) => handleNavItemChange(index, 'href', e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <Button variant="outline" size="icon" onClick={() => handleRemoveNavItem(index, false)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                 <div className="grid gap-2">
+                                                    <Label htmlFor={`nav-item-image-${index}`}>Dashboard Image URL</Label>
                                                     <Input
-                                                        id={`nav-item-label-${index}`}
-                                                        value={item.label}
-                                                        onChange={(e) => handleNavItemChange(index, 'label', e.target.value)}
+                                                        id={`nav-item-image-${index}`}
+                                                        value={item.image}
+                                                        onChange={(e) => handleNavItemChange(index, 'image', e.target.value)}
                                                     />
                                                 </div>
-                                                <div className="grid gap-2 flex-1">
-                                                    <Label htmlFor={`nav-item-path-${index}`}>Path</Label>
-                                                    <Input
-                                                        id={`nav-item-path-${index}`}
-                                                        value={item.href}
-                                                        onChange={(e) => handleNavItemChange(index, 'href', e.target.value)}
-                                                    />
-                                                </div>
-                                                <Button variant="outline" size="icon" onClick={() => handleRemoveNavItem(index, false)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
                                             </div>
                                         ))}
                                         <div className="border p-4 rounded-md mt-4 grid gap-4">
@@ -246,6 +256,10 @@ export default function SettingsPage() {
                                                     <Label htmlFor="new-nav-item-path">Path</Label>
                                                     <Input id="new-nav-item-path" value={newNavItem.href} onChange={(e) => setNewNavItem({...newNavItem, href: e.target.value})} placeholder="/new-path"/>
                                                 </div>
+                                            </div>
+                                             <div className="grid gap-2">
+                                                <Label htmlFor="new-nav-item-image">Dashboard Image URL</Label>
+                                                <Input id="new-nav-item-image" value={newNavItem.image} onChange={(e) => setNewNavItem({...newNavItem, image: e.target.value})} />
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="new-nav-item-icon">Icon</Label>
@@ -519,3 +533,4 @@ export default function SettingsPage() {
         </div>
     )
 }
+

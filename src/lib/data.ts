@@ -1,3 +1,4 @@
+
 import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users as UsersIcon, Component } from 'lucide-react';
 
 export const iconMap: Record<string, React.ElementType> = {
@@ -142,19 +143,20 @@ export const users: User[] = [
 
 // This is a mock of the currently logged-in user.
 // In a real app, this would come from an auth context.
-export const currentUser: User = users[1] // Professor Jones
+export const currentUser: User = users[3] // John Doe (Student)
 
 export type Course = {
     name: string;
     code: string;
     description: string;
     instructor: string;
+    enrolledStudents: string[];
 }
 
 export const courses: Course[] = [
-    { name: "Introduction to AI", code: "CS461", description: "An intro to AI.", instructor: "Dr. Smith" },
-    { name: "Advanced Algorithms", code: "CS501", description: "Deep dive into algorithms.", instructor: "Professor Jones" },
-    { name: "Web Development", code: "CS330", description: "Building for the web.", instructor: "Professor Jones" },
+    { name: "Introduction to AI", code: "CS461", description: "An intro to AI.", instructor: "Dr. Smith", enrolledStudents: [] },
+    { name: "Advanced Algorithms", code: "CS501", description: "Deep dive into algorithms.", instructor: "Professor Jones", enrolledStudents: ['user-4'] },
+    { name: "Web Development", code: "CS330", description: "Building for the web.", instructor: "Professor Jones", enrolledStudents: [] },
 ]
 
 export type Appointment = {

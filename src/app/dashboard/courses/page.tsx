@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -16,13 +17,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useState } from "react"
+import type { Course } from "@/lib/data"
+
 
 export default function CoursesPage() {
-
+  const [courses, setCourses] = useState<Course[]>(allCourses)
+  
+  const isStudent = currentUser.role === 'student'
+  const isFaculty = currentUser.role === 'faculty'
   const isAdmin = currentUser.role === 'admin'
-  const courses = isAdmin
-    ? allCourses
-    : allCourses.filter(course => course.instructor === currentUser.name)
+
+  const handleEnroll = (courseCode: string) => {
+    setCourses(currentCourses =>
+      currentCourses.map(course => {
+        if (course.code === courseCode) {
+          const isEnrolled = course.enrolledStudents.includes(currentUser.id)
+          if (isEnrolled) {
+            // Disenroll
+            return { ...course, enrolledStudents: course.enrolledStudents.filter(id => id !== currentUser.id) }
+          } else {
+            // Enroll
+            return { ...course, enrolledStudents: [...course.enrolledStudents, currentUser.id] }
+          }
+        }
+        return course
+      })
+    )
+  }
+
+  const displayedCourses = isFaculty
+    ? courses.filter(course => course.instructor === currentUser.name)
+    : courses
 
 
   return (
@@ -30,9 +56,12 @@ export default function CoursesPage() {
       <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>My Courses</CardTitle>
+            <CardTitle>{isStudent ? "Course Catalog" : "My Courses"}</CardTitle>
             <CardDescription>
-              A list of courses you are teaching or managing.
+              {isStudent 
+                ? "Browse and enroll in available courses."
+                : "A list of courses you are teaching or managing."
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -42,78 +71,103 @@ export default function CoursesPage() {
                   <TableHead>Course Name</TableHead>
                   <TableHead>Code</TableHead>
                   <TableHead className="hidden md:table-cell">Instructor</TableHead>
+                   {isStudent && <TableHead>Status</TableHead>}
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {courses.map(course => (
-                  <TableRow key={course.code}>
-                    <TableCell className="font-medium">{course.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{course.code}</Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{course.instructor}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
+                {displayedCourses.map(course => {
+                  const isEnrolled = isStudent && course.enrolledStudents.includes(currentUser.id)
+                  return (
+                    <TableRow key={course.code}>
+                      <TableCell className="font-medium">{course.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{course.code}</Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{course.instructor}</TableCell>
+                      {isStudent && (
+                        <TableCell>
+                          {isEnrolled ? (
+                            <Badge variant="default">Enrolled</Badge>
+                          ) : (
+                            <Badge variant="secondary">Not Enrolled</Badge>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        {isStudent ? (
+                          <Button 
+                            variant={isEnrolled ? "outline" : "default"} 
+                            size="sm"
+                            onClick={() => handleEnroll(course.code)}
+                          >
+                            {isEnrolled ? "Disenroll" : "Enroll"}
                           </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        ) : (
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                              <Button aria-haspopup="true" size="icon" variant="ghost">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Toggle menu</span>
+                              </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem>Edit</DropdownMenuItem>
+                              <DropdownMenuItem>Delete</DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Add New Course</CardTitle>
-          <CardDescription>
-            Fill out the form below to add a new course to the catalog.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-6">
-            <div className="grid gap-3">
-              <Label htmlFor="course-name">Course Name</Label>
-              <Input
-                id="course-name"
-                type="text"
-                className="w-full"
-                placeholder="e.g. Introduction to Computer Science"
-              />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="course-code">Course Code</Label>
-              <Input
-                id="course-code"
-                type="text"
-                className="w-full"
-                placeholder="e.g. CS101"
-              />
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="A comprehensive introduction to the fundamental concepts of computer science..."
-                className="min-h-32"
-              />
-            </div>
-            <Button type="submit" className="w-fit">Save Course</Button>
-          </form>
-        </CardContent>
-      </Card>
+      {(isAdmin || isFaculty) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Course</CardTitle>
+            <CardDescription>
+              Fill out the form below to add a new course to the catalog.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="grid gap-6">
+              <div className="grid gap-3">
+                <Label htmlFor="course-name">Course Name</Label>
+                <Input
+                  id="course-name"
+                  type="text"
+                  className="w-full"
+                  placeholder="e.g. Introduction to Computer Science"
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="course-code">Course Code</Label>
+                <Input
+                  id="course-code"
+                  type="text"
+                  className="w-full"
+                  placeholder="e.g. CS101"
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="A comprehensive introduction to the fundamental concepts of computer science..."
+                  className="min-h-32"
+                />
+              </div>
+              <Button type="submit" className="w-fit">Save Course</Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

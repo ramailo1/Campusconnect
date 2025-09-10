@@ -1,16 +1,17 @@
-import { FileText, User, Shield, BookOpen, Calendar, GraduationCap } from 'lucide-react';
+import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users } from 'lucide-react';
 
 export const navItems = [
-  { href: '/dashboard', icon: GraduationCap, label: 'Dashboard' },
+  { href: '/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/dashboard/courses', icon: BookOpen, label: 'Courses' },
   { href: '/dashboard/appointments', icon: Calendar, label: 'Appointments' },
   { href: '/dashboard/library', icon: FileText, label: 'Library' },
 ];
 
 export const adminNavItems = [
-  { href: '/dashboard/analytics', icon: User, label: 'Analytics' },
-  { href: '/dashboard/users', icon: User, label: 'Users' },
+  { href: '/dashboard/analytics', icon: LineChart, label: 'Analytics' },
+  { href: '/dashboard/users', icon: Users, label: 'Users' },
   { href: '/dashboard/audit-logs', icon: Shield, label: 'Audit Logs' },
+  { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
 ]
 
 export const notifications = [

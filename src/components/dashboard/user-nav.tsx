@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "./theme-toggle"
 import { User, Settings, LogOut } from "lucide-react"
+import Link from "next/link"
 
 export function UserNav() {
   return (
@@ -34,13 +35,17 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/profile" className="flex items-center w-full">
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings" className="flex items-center w-full">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

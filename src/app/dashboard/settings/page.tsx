@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState } from "react"
@@ -68,6 +69,22 @@ export default function SettingsPage() {
         metrics: ["total-visitors", "borrowed-books", "overdue-books", "new-members"],
         sections: ["users-list", "books-list", "top-choices"],
     })
+    
+    const [dashboardText, setDashboardText] = useState({
+        greeting: "Hello",
+        metrics: {
+          "total-visitors": "Total Visitors",
+          "borrowed-books": "Borrowed Books",
+          "overdue-books": "Overdue Books",
+          "new-members": "New Members",
+        },
+        sections: {
+          "users-list": "Users List",
+          "books-list": "Books List",
+          "top-choices": "Top Choices",
+        },
+        addUserButton: "Add New User"
+    });
 
 
     const handleNavItemChange = (index: number, field: keyof NavItem, value: string) => {
@@ -170,9 +187,11 @@ export default function SettingsPage() {
         console.log("Saving new admin nav items:", adminNavItems)
         console.log("Saving new roles:", roles)
         console.log("Saving dashboard settings:", dashboardSettings)
+        console.log("Saving dashboard text:", dashboardText)
         
         // This is a mock save. In a real app, you'd save this to a database or a file.
         localStorage.setItem("dashboardSettings", JSON.stringify(dashboardSettings))
+        localStorage.setItem("dashboardText", JSON.stringify(dashboardText))
 
         toast({
             title: "Settings Saved",
@@ -397,10 +416,45 @@ export default function SettingsPage() {
                              <Card>
                                 <CardHeader>
                                     <CardTitle>UI Text Customization</CardTitle>
-                                    <CardDescription>Customize labels and placeholders for forms.</CardDescription>
+                                    <CardDescription>Customize labels and placeholders for forms and other UI elements.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid gap-6">
                                     <Accordion type="multiple" className="w-full">
+                                        <AccordionItem value="dashboard-text">
+                                            <AccordionTrigger>Dashboard Page</AccordionTrigger>
+                                            <AccordionContent className="p-4 grid gap-4">
+                                                 <div className="grid gap-2">
+                                                    <Label htmlFor="dashboard-greeting">Greeting Text</Label>
+                                                    <Input id="dashboard-greeting" value={dashboardText.greeting} onChange={(e) => setDashboardText({...dashboardText, greeting: e.target.value})} />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Metric Card Labels</Label>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        {Object.keys(dashboardText.metrics).map(key => (
+                                                            <div key={key} className="grid gap-2">
+                                                                <Label htmlFor={`metric-${key}`} className="text-xs capitalize text-muted-foreground">{key.replace(/-/g, ' ')}</Label>
+                                                                <Input id={`metric-${key}`} value={dashboardText.metrics[key as keyof typeof dashboardText.metrics]} onChange={(e) => setDashboardText({...dashboardText, metrics: {...dashboardText.metrics, [key]: e.target.value}})} />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Section Titles</Label>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        {Object.keys(dashboardText.sections).map(key => (
+                                                             <div key={key} className="grid gap-2">
+                                                                <Label htmlFor={`section-${key}`} className="text-xs capitalize text-muted-foreground">{key.replace(/-/g, ' ')}</Label>
+                                                                <Input id={`section-${key}`} value={dashboardText.sections[key as keyof typeof dashboardText.sections]} onChange={(e) => setDashboardText({...dashboardText, sections: {...dashboardText.sections, [key]: e.target.value}})} />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                 <div className="grid gap-2">
+                                                    <Label htmlFor="add-user-button">"Add New User" Button Text</Label>
+                                                    <Input id="add-user-button" value={dashboardText.addUserButton} onChange={(e) => setDashboardText({...dashboardText, addUserButton: e.target.value})} />
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
                                         <AccordionItem value="add-course-form">
                                             <AccordionTrigger>Add New Course Form</AccordionTrigger>
                                             <AccordionContent className="p-4 grid gap-4">
@@ -545,3 +599,4 @@ export default function SettingsPage() {
     )
 
     
+}

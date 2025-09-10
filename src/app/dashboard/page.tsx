@@ -21,11 +21,43 @@ import { useMemo, useState, useEffect } from "react"
 
 export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [dashboardSettings, setDashboardSettings] = useState({
+    metrics: ["total-visitors", "borrowed-books", "overdue-books", "new-members"],
+    sections: ["users-list", "books-list", "top-choices"],
+  });
+  const [dashboardText, setDashboardText] = useState({
+    greeting: "Hello",
+    metrics: {
+      "total-visitors": "Total Visitors",
+      "borrowed-books": "Borrowed Books",
+      "overdue-books": "Overdue Books",
+      "new-members": "New Members",
+    },
+    sections: {
+      "users-list": "Users List",
+      "books-list": "Books List",
+      "top-choices": "Top Choices",
+    },
+    addUserButton: "Add New User"
+  });
+
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDate(new Date())
     }, 60000) // Update every minute
+
+    // In a real app, you'd fetch these settings. For now, we use localStorage for simulation.
+    const savedSettings = localStorage.getItem("dashboardSettings")
+    if (savedSettings) {
+        setDashboardSettings(JSON.parse(savedSettings))
+    }
+    const savedText = localStorage.getItem("dashboardText")
+    if (savedText) {
+        setDashboardText(JSON.parse(savedText))
+    }
+
+
     return () => clearInterval(timer)
   }, [])
 
@@ -33,37 +65,30 @@ export default function Dashboard() {
     {
       key: "total-visitors",
       icon: Users,
-      label: "Total Visitors",
+      label: dashboardText.metrics["total-visitors"],
       value: users.length,
-      color: "bg-sky-100 dark:bg-sky-900/50",
-      textColor: "text-sky-600 dark:text-sky-400"
     },
     {
       key: "borrowed-books",
       icon: Library,
-      label: "Borrowed Books",
+      label: dashboardText.metrics["borrowed-books"],
       value: libraryBooks.filter(b => b.borrowedBy).length,
-      color: "bg-rose-100 dark:bg-rose-900/50",
-      textColor: "text-rose-600 dark:text-rose-400"
     },
     {
       key: "overdue-books",
       icon: BookCopy,
-      label: "Overdue Books",
+      label: dashboardText.metrics["overdue-books"],
       value: 3, // Dummy data
-      color: "bg-amber-100 dark:bg-amber-900/50",
-      textColor: "text-amber-600 dark:text-amber-400"
     },
     {
       key: "new-members",
       icon: UserCheck,
-      label: "New Members",
+      label: dashboardText.metrics["new-members"],
       value: 2, // Dummy data
-      color: "bg-emerald-100 dark:bg-emerald-900/50",
-      textColor: "text-emerald-600 dark:text-emerald-400"
     },
-  ], []);
+  ], [dashboardText.metrics]);
 
+  const displayedMetrics = metrics.filter(m => dashboardSettings.metrics.includes(m.key))
   const topChoices = useMemo(() => libraryBooks.slice(0, 4), []);
   const recentUsers = useMemo(() => users.slice(0, 5), []);
   const recentBooks = useMemo(() => libraryBooks.slice(0, 5), []);
@@ -72,12 +97,12 @@ export default function Dashboard() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Hello, {currentUser.name.split(' ')[0]}!</h1>
+        <h1 className="text-3xl font-bold">{dashboardText.greeting}, {currentUser.name.split(' ')[0]}!</h1>
         <p className="text-muted-foreground">{format(currentDate, "EEEE, MMMM d, yyyy | h:mm a")}</p>
       </div>
       
        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-        {metrics.map((metric) => (
+        {displayedMetrics.map((metric) => (
           <Card key={metric.key} className="flex items-center p-4">
             <div className="flex-grow">
                 <div className="text-4xl font-bold">{metric.value}</div>
@@ -93,10 +118,11 @@ export default function Dashboard() {
       </div>
       
       <div className="grid gap-8 md:grid-cols-2 mt-8">
+        {dashboardSettings.sections.includes("users-list") && (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Users List</CardTitle>
-                <Button>Add New User</Button>
+                <CardTitle>{dashboardText.sections["users-list"]}</CardTitle>
+                <Button>{dashboardText.addUserButton}</Button>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -127,9 +153,11 @@ export default function Dashboard() {
                 </Table>
             </CardContent>
         </Card>
+        )}
+        {dashboardSettings.sections.includes("books-list") && (
         <Card>
             <CardHeader>
-                <CardTitle>Books List</CardTitle>
+                <CardTitle>{dashboardText.sections["books-list"]}</CardTitle>
             </CardHeader>
             <CardContent>
                  <Table>
@@ -152,10 +180,12 @@ export default function Dashboard() {
                 </Table>
             </CardContent>
         </Card>
+        )}
       </div>
 
+       {dashboardSettings.sections.includes("top-choices") && (
        <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Top Choices</h2>
+            <h2 className="text-2xl font-bold mb-4">{dashboardText.sections["top-choices"]}</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {topChoices.map(book => (
                 <Card key={book.id} className="overflow-hidden">
@@ -168,6 +198,7 @@ export default function Dashboard() {
             ))}
             </div>
        </div>
+       )}
     </>
   )
 }

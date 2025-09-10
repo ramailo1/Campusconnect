@@ -7,213 +7,167 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { BookCopy, CalendarDays, Users, Library, Activity, Clock } from "lucide-react"
+import { Users, Library, BookCopy, UserCheck } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { navItems as allNavItems, appointments, libraryBooks, users, currentUser } from "@/lib/data"
-import type { Appointment, User } from "@/lib/data";
+import { libraryBooks, users, currentUser } from "@/lib/data"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { format } from "date-fns"
 import { useMemo, useState, useEffect } from "react"
-import { formatDistanceToNow, isFuture } from 'date-fns'
 
-
-function Countdown({ to }: { to: Date }) {
-  const [time, setTime] = useState(formatDistanceToNow(to, { addSuffix: true }))
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime(formatDistanceToNow(to, { addSuffix: true }))
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [to])
-
-  return <span className="font-bold">{time}</span>
-}
 
 export default function Dashboard() {
-  // In a real app, these would be managed in a global state or settings context
-  const [displayedModules, setDisplayedModules] = useState([
-    "/dashboard/courses",
-    "/dashboard/appointments",
-    "/dashboard/library",
-  ])
-  const [displayedMetrics, setDisplayedMetrics] = useState([
-    "online-users",
-    "booked-books",
-    "total-appointments",
-  ])
-  const [metricsData, setMetricsData] = useState({
-    onlineUsers: 0,
-    bookedBooks: 0,
-    totalAppointments: 0,
-  });
+  const [currentDate, setCurrentDate] = useState(new Date())
 
   useEffect(() => {
-    // Simulating fetching data or dynamic calculations
-    setMetricsData({
-      onlineUsers: Math.floor(Math.random() * users.length) + 1,
-      bookedBooks: libraryBooks.filter(b => b.borrowedBy).length,
-      totalAppointments: appointments.length,
-    });
-  }, []);
+    const timer = setInterval(() => {
+      setCurrentDate(new Date())
+    }, 60000) // Update every minute
+    return () => clearInterval(timer)
+  }, [])
 
+  const metrics = useMemo(() => [
+    {
+      key: "total-visitors",
+      icon: Users,
+      label: "Total Visitors",
+      value: users.length,
+      color: "bg-sky-100 dark:bg-sky-900/50",
+      textColor: "text-sky-600 dark:text-sky-400"
+    },
+    {
+      key: "borrowed-books",
+      icon: Library,
+      label: "Borrowed Books",
+      value: libraryBooks.filter(b => b.borrowedBy).length,
+      color: "bg-rose-100 dark:bg-rose-900/50",
+      textColor: "text-rose-600 dark:text-rose-400"
+    },
+    {
+      key: "overdue-books",
+      icon: BookCopy,
+      label: "Overdue Books",
+      value: 3, // Dummy data
+      color: "bg-amber-100 dark:bg-amber-900/50",
+      textColor: "text-amber-600 dark:text-amber-400"
+    },
+    {
+      key: "new-members",
+      icon: UserCheck,
+      label: "New Members",
+      value: 2, // Dummy data
+      color: "bg-emerald-100 dark:bg-emerald-900/50",
+      textColor: "text-emerald-600 dark:text-emerald-400"
+    },
+  ], []);
 
-  const modules = useMemo(() => {
-    return allNavItems.filter(item => displayedModules.includes(item.href) && item.href !== '/dashboard')
-  }, [displayedModules])
-
-  const metrics = useMemo(() => {
-    return [
-      {
-        key: "online-users",
-        icon: Users,
-        label: "Online Users",
-        value: metricsData.onlineUsers,
-        description: "Users currently active",
-        color: "bg-blue-100 dark:bg-blue-900/50",
-        textColor: "text-blue-600 dark:text-blue-400"
-      },
-      {
-        key: "booked-books",
-        icon: Library,
-        label: "Books Checked Out",
-        value: metricsData.bookedBooks,
-        description: "Books currently on loan",
-        color: "bg-green-100 dark:bg-green-900/50",
-        textColor: "text-green-600 dark:text-green-400"
-      },
-      {
-        key: "total-appointments",
-        icon: CalendarDays,
-        label: "Total Appointments",
-        value: metricsData.totalAppointments,
-        description: "Scheduled appointments",
-        color: "bg-purple-100 dark:bg-purple-900/50",
-        textColor: "text-purple-600 dark:text-purple-400"
-      },
-    ].filter(m => displayedMetrics.includes(m.key))
-  }, [displayedMetrics, metricsData])
-
-  const nextAppointments = useMemo(() => {
-    const upcoming = appointments
-      .filter(appt => isFuture(new Date(appt.date)))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    if (upcoming.length === 0) return [];
-    
-    const nextApptTime = upcoming[0].date;
-    return upcoming.filter(appt => appt.date === nextApptTime);
-  }, [appointments]);
-
-  const canViewNextAppointment = currentUser.role === 'admin' || currentUser.role === 'faculty';
+  const topChoices = useMemo(() => libraryBooks.slice(0, 4), []);
+  const recentUsers = useMemo(() => users.slice(0, 5), []);
+  const recentBooks = useMemo(() => libraryBooks.slice(0, 5), []);
 
 
   return (
     <>
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl">Dashboard</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Hello, {currentUser.name.split(' ')[0]}!</h1>
+        <p className="text-muted-foreground">{format(currentDate, "EEEE, MMMM d, yyyy | h:mm a")}</p>
       </div>
+      
        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         {metrics.map((metric) => (
-          <Card key={metric.key} className="flex flex-col">
-            <CardHeader className="flex-grow">
-               <div className="flex items-start justify-between">
-                <div className="flex flex-col space-y-1.5">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+          <Card key={metric.key} className="flex items-center p-4">
+            <div className="flex-grow">
+                <div className="text-4xl font-bold">{metric.value}</div>
+                <p className="text-sm text-muted-foreground">
                     {metric.label}
-                  </CardTitle>
-                  <div className="text-3xl font-bold">{metric.value}</div>
-                </div>
-                <div className={`flex items-center justify-center rounded-lg p-3 ${metric.color}`}>
-                  <metric.icon className={`h-6 w-6 ${metric.textColor}`} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {metric.description}
-              </p>
-            </CardContent>
+                </p>
+            </div>
+            <div className="flex items-center justify-center rounded-lg p-3 bg-primary/10">
+                <metric.icon className="h-6 w-6 text-primary" />
+            </div>
           </Card>
         ))}
-
-        {canViewNextAppointment && (
-          <Card className="col-span-1 md:col-span-2 lg:col-span-1">
-             <CardHeader>
-               <div className="flex items-start justify-between">
-                <div className="flex flex-col space-y-1.5">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Next Appointment
-                  </CardTitle>
-                  <div className="text-2xl">
-                    {nextAppointments.length > 0 ? <Countdown to={new Date(nextAppointments[0].date)} /> : "No upcoming appointments"}
-                  </div>
-                </div>
-                <div className="flex items-center justify-center rounded-lg p-3 bg-amber-100 dark:bg-amber-900/50">
-                  <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                </div>
-              </div>
+      </div>
+      
+      <div className="grid gap-8 md:grid-cols-2 mt-8">
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Users List</CardTitle>
+                <Button>Add New User</Button>
             </CardHeader>
             <CardContent>
-              {nextAppointments.length > 0 ? (
-                <div className="space-y-2 text-sm">
-                   {nextAppointments.map(appt => {
-                     const student = users.find(u => u.id === appt.studentId);
-                     const advisor = users.find(u => u.id === appt.advisorId);
-                     return (
-                        <div key={appt.id} className="flex justify-between items-center text-muted-foreground">
-                          <span>{student?.name} with {advisor?.name}</span>
-                        </div>
-                     )
-                   })}
-                </div>
-              ) : (
-                 <p className="text-xs text-muted-foreground">
-                    Your schedule is clear.
-                  </p>
-              )}
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>User Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {recentUsers.map(user => (
+                            <TableRow key={user.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={`https://picsum.photos/seed/${user.id}/40/40`} />
+                                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <span>{user.name}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell><Badge variant="secondary">{user.role}</Badge></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </CardContent>
-          </Card>
-        )}
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-        {modules.map((module) => (
-          <Card key={module.label}>
-            <CardHeader className="p-0 overflow-hidden rounded-t-lg">
-              <Image src={module.image!} alt={module.label} width={600} height={400} className="aspect-video object-cover" data-ai-hint={module.imageHint} />
-            </CardHeader>
+        </Card>
+        <Card>
             <CardHeader>
-              <div className="flex items-center gap-4">
-                <module.icon className="h-8 w-8 text-primary" />
-                <CardTitle>{module.label}</CardTitle>
-              </div>
-              <CardDescription className="mt-2">{module.description}</CardDescription>
+                <CardTitle>Books List</CardTitle>
             </CardHeader>
             <CardContent>
-              <Link href={module.href}>
-                <Button className="w-full">
-                  Go to {module.label}
-                </Button>
-              </Link>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Book ID</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Author</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {recentBooks.map(book => (
+                             <TableRow key={book.id}>
+                                <TableCell className="font-mono text-muted-foreground">{book.id.substring(0, 10)}...</TableCell>
+                                <TableCell>{book.title}</TableCell>
+                                <TableCell>{book.author}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </CardContent>
-          </Card>
-        ))}
+        </Card>
       </div>
-       {modules.length === 0 && metrics.length === 0 && (
-          <Card className="flex flex-col items-center justify-center p-12 text-center col-span-full">
-              <CardHeader>
-                  <CardTitle>Dashboard is Empty</CardTitle>
-                  <CardDescription>Go to Settings {'>'} Dashboard to add modules and analytics.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <Link href="/dashboard/settings">
-                      <Button>Go to Settings</Button>
-                  </Link>
-              </CardContent>
-          </Card>
-      )}
+
+       <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Top Choices</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {topChoices.map(book => (
+                <Card key={book.id} className="overflow-hidden">
+                    <Image src={book.coverImage} alt={book.title} width={400} height={600} className="aspect-[2/3] object-cover w-full" />
+                    <CardHeader>
+                        <CardTitle className="text-base truncate">{book.title}</CardTitle>
+                        <CardDescription>{book.author}</CardDescription>
+                    </CardHeader>
+                </Card>
+            ))}
+            </div>
+       </div>
     </>
   )
 }
-

@@ -27,6 +27,7 @@ This project is a comprehensive, customizable campus management system built wit
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Charts**: [Recharts](https://recharts.org/)
+- **Database**: [Firebase Firestore](https://firebase.google.com/docs/firestore)
 
 ## Getting Started
 
@@ -36,6 +37,7 @@ Follow these steps to get the project running on your local machine.
 
 - [Node.js](https://nodejs.org/) (v18 or later)
 - [npm](https://www.npmjs.com/) or a compatible package manager
+- A [Firebase Project](https://console.firebase.google.com/).
 
 ### Installation
 
@@ -51,18 +53,22 @@ Follow these steps to get the project running on your local machine.
     ```
 
 3.  **Set up environment variables:**
-    Create a `.env` file in the root of the project by copying the example format. This file is used for sensitive information like database connection strings and API keys.
+    Create a `.env` file in the root of the project. This is not strictly required for local development against the Firebase Local Emulator, but it's good practice. For production, you will need to populate this with your actual Firebase project credentials.
 
-    ```
-    # .env
+4.  **Configure Firebase:**
+    Open the `src/lib/firebase.ts` and `src/lib/seed.ts` files and replace the placeholder `firebaseConfig` object with your actual Firebase project's web app configuration.
 
-    # Database connection URL (e.g., PostgreSQL)
-    # Replace with your actual database connection string
-    DATABASE_URL="postgresql://user:password@host:port/database"
+    You can find this configuration in the Firebase console:
+    *Go to Project settings > General > Your apps > Web app > SDK setup and configuration > Config*.
 
-    # Other API keys
-    # SERVICE_API_KEY=your_api_key_here
-    ```
+### Seed the Database
+
+To populate your Firestore database with initial sample data (users, courses, books, etc.), run the seed command. This only needs to be done once.
+
+```bash
+npm run seed
+```
+This command will connect to your Firebase project and upload the default data. It will skip seeding if it detects that the collections are not empty.
 
 ### Running the Development Server
 

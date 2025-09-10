@@ -34,7 +34,8 @@ type SidebarContext = {
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
-  toggleSidebar: () => void
+  toggleSidebar: () => void,
+  behavior: "expanded" | "hover"
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -70,10 +71,19 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
+    const [behavior, setBehavior] = React.useState<"expanded" | "hover">("expanded");
+
+    React.useEffect(() => {
+        const savedBehavior = localStorage.getItem("sidebarBehavior") as "expanded" | "hover" | null;
+        if (savedBehavior) {
+            setBehavior(savedBehavior);
+        }
+    }, []);
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(defaultOpen)
+    const [_open, _setOpen] = React.useState(behavior === "expanded" ? defaultOpen : false);
+
     const open = openProp ?? _open
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
@@ -81,21 +91,28 @@ const SidebarProvider = React.forwardRef<
         if (setOpenProp) {
           setOpenProp(openState)
         } else {
-          _setOpen(openState)
+            if (behavior === "expanded") {
+                 _setOpen(openState)
+            }
+        }
+        
+        if (behavior === "expanded") {
+            document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
         }
 
-        // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
-      [setOpenProp, open]
+      [setOpenProp, open, behavior]
     )
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
-      return isMobile
-        ? setOpenMobile((open) => !open)
-        : setOpen((open) => !open)
-    }, [isMobile, setOpen, setOpenMobile])
+        if (isMobile) {
+            setOpenMobile((open) => !open);
+        } else if (behavior === "expanded") {
+            setOpen((open) => !open);
+        }
+    }, [isMobile, setOpen, setOpenMobile, behavior]);
+
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
@@ -126,8 +143,9 @@ const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
+        behavior
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, behavior]
     )
 
     return (
@@ -176,7 +194,19 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile, behavior, setOpen } = useSidebar()
+
+    const handleMouseEnter = () => {
+        if (behavior === 'hover' && !isMobile) {
+            setOpen(true);
+        }
+    }
+    
+    const handleMouseLeave = () => {
+        if (behavior === 'hover' && !isMobile) {
+            setOpen(false);
+        }
+    }
 
     if (collapsible === "none") {
       return (
@@ -216,6 +246,8 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={cn(
             "group hidden md:block text-sidebar-foreground",
             "transition-all duration-200 ease-in-out",
@@ -239,7 +271,9 @@ const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, behavior } = useSidebar()
+  
+  if (behavior === 'hover') return null;
 
   return (
     <Button

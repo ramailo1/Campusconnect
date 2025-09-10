@@ -9,7 +9,7 @@ import {
 import { UserNav } from "@/components/dashboard/user-nav"
 import { MainNav } from "@/components/dashboard/main-nav"
 import Header from "@/components/dashboard/header"
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarBody, SidebarFooter } from "@/components/ui/sidebar"
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarBody, SidebarFooter } from "@/components/ui/sidebar"
 
 export default function DashboardLayout({
   children,
@@ -26,7 +26,6 @@ export default function DashboardLayout({
                   <GraduationCap className="h-6 w-6 text-primary" />
                   <span className="group-[[data-state=collapsed]]:hidden">CampusConnect</span>
                 </Link>
-                <SidebarTrigger className="group-[[data-state=collapsed]]:hidden" />
               </SidebarHeader>
               <SidebarContent>
                 <MainNav />

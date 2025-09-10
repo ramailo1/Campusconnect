@@ -29,6 +29,7 @@ import { defaultRoles, permissionLabels } from "@/lib/roles"
 import type { Role, Permission } from "@/lib/roles"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 
 export default function SettingsPage() {
@@ -110,6 +111,7 @@ export default function SettingsPage() {
         signinText: "Already have an account?",
         signinLink: "Sign in",
     });
+    const [sidebarBehavior, setSidebarBehavior] = useState("expanded")
 
 
     const handleNavItemChange = (index: number, field: keyof NavItem, value: string | boolean) => {
@@ -217,6 +219,7 @@ export default function SettingsPage() {
         // This is a mock save. In a real app, you'd save this to a database or a file.
         localStorage.setItem("dashboardSettings", JSON.stringify(dashboardSettings))
         localStorage.setItem("dashboardText", JSON.stringify(dashboardText))
+        localStorage.setItem("sidebarBehavior", sidebarBehavior)
 
         toast({
             title: "Settings Saved",
@@ -252,11 +255,12 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="navigation" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
+                        <TabsList className="grid w-full grid-cols-5">
                             <TabsTrigger value="navigation">Navigation</TabsTrigger>
                             <TabsTrigger value="roles">Roles &amp; Permissions</TabsTrigger>
                             <TabsTrigger value="ui-customization">UI Customization</TabsTrigger>
                             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                            <TabsTrigger value="appearance">Appearance</TabsTrigger>
                         </TabsList>
                         
                         <TabsContent value="navigation" className="pt-6">
@@ -665,6 +669,29 @@ export default function SettingsPage() {
                                                 </div>
                                             ))}
                                         </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                         <TabsContent value="appearance" className="pt-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Appearance</CardTitle>
+                                    <CardDescription>Customize the look and feel of the application.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="grid gap-6">
+                                    <div className="grid gap-4">
+                                        <Label className="font-medium">Sidebar Behavior</Label>
+                                        <RadioGroup value={sidebarBehavior} onValueChange={setSidebarBehavior}>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="expanded" id="sb-expanded" />
+                                                <Label htmlFor="sb-expanded">Always Expanded</Label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <RadioGroupItem value="hover" id="sb-hover" />
+                                                <Label htmlFor="sb-hover">Expand on Hover</Label>
+                                            </div>
+                                        </RadioGroup>
                                     </div>
                                 </CardContent>
                             </Card>

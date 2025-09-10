@@ -16,12 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { NavItem } from "@/lib/data"
+import { defaultRoles, permissionLabels } from "@/lib/roles"
+import type { Role, Permission } from "@/lib/roles"
+
 
 export default function SettingsPage() {
     const { toast } = useToast()
     const [navItems, setNavItems] = useState<NavItem[]>(defaultNavItems)
     const [adminNavItems, setAdminNavItems] = useState<NavItem[]>(defaultAdminNavItems)
+    const [roles, setRoles] = useState<Role[]>(defaultRoles)
+    const [newRoleName, setNewRoleName] = useState("")
 
     const [newNavItem, setNewNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
     const [newAdminNavItem, setNewAdminNavItem] = useState({ label: "", href: "", icon: Object.keys(iconMap)[0] })
@@ -73,25 +85,63 @@ export default function SettingsPage() {
         }
     }
 
+    const handleRoleNameChange = (index: number, newName: string) => {
+        const newRoles = [...roles]
+        newRoles[index].name = newName
+        setRoles(newRoles)
+    }
+
+    const handlePermissionChange = (roleIndex: number, permission: Permission, checked: boolean) => {
+        const newRoles = [...roles]
+        const currentPermissions = newRoles[roleIndex].permissions
+        if (checked) {
+            newRoles[roleIndex].permissions = [...currentPermissions, permission]
+        } else {
+            newRoles[roleIndex].permissions = currentPermissions.filter(p => p !== permission)
+        }
+        setRoles(newRoles)
+    }
+    
+    const handleAddRole = () => {
+        if (!newRoleName.trim()) {
+            toast({ variant: "destructive", title: "Role name cannot be empty." })
+            return
+        }
+        const newRole: Role = {
+            id: newRoleName.toLowerCase().replace(/\s+/g, '-'),
+            name: newRoleName,
+            permissions: []
+        }
+        setRoles([...roles, newRole])
+        setNewRoleName("")
+    }
+
+    const handleRemoveRole = (index: number) => {
+        setRoles(roles.filter((_, i) => i !== index))
+    }
+
     const handleSaveChanges = () => {
         console.log("Saving new nav items:", navItems)
         console.log("Saving new admin nav items:", adminNavItems)
+        console.log("Saving new roles:", roles)
         toast({
             title: "Settings Saved",
-            description: "Menu items have been updated. (This is a simulation)",
+            description: "Your changes have been updated. (This is a simulation)",
         })
     }
 
     const iconOptions = Object.keys(iconMap).map(key => (
         <SelectItem key={key} value={key}>{key}</SelectItem>
     ))
+    
+    const allPermissions = Object.keys(permissionLabels) as Permission[]
 
     return (
         <div className="grid gap-6">
             <Card>
                 <CardHeader>
                     <CardTitle>System Settings</CardTitle>
-                    <CardDescription>Manage system-wide settings like navigation menu items.</CardDescription>
+                    <CardDescription>Manage system-wide settings like navigation and user roles.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-6">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -200,7 +250,61 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                    <Button onClick={handleSaveChanges}>Save Changes</Button>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Role Management</CardTitle>
+                            <CardDescription>Define user roles and their permissions.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
+                            <Accordion type="single" collapsible className="w-full">
+                                {roles.map((role, roleIndex) => (
+                                    <AccordionItem value={role.id} key={role.id}>
+                                        <AccordionTrigger>
+                                            <div className="flex items-center gap-4 flex-1">
+                                                <Input value={role.name} onChange={(e) => handleRoleNameChange(roleIndex, e.target.value)} className="font-semibold text-lg" />
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="p-4">
+                                            <h4 className="font-medium mb-4">Permissions</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                                {allPermissions.map(permission => (
+                                                    <div key={permission} className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id={`${role.id}-${permission}`}
+                                                            checked={role.permissions.includes(permission)}
+                                                            onCheckedChange={(checked) => handlePermissionChange(roleIndex, permission, !!checked)}
+                                                        />
+                                                        <Label htmlFor={`${role.id}-${permission}`} className="font-normal">
+                                                            {permissionLabels[permission]}
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <Button variant="destructive" size="sm" onClick={() => handleRemoveRole(roleIndex)} className="mt-6">
+                                                <Trash2 className="mr-2" /> Remove Role
+                                            </Button>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                             <div className="border p-4 rounded-md mt-4 grid gap-4">
+                                 <h4 className="text-md font-medium">Add New Role</h4>
+                                 <div className="flex items-center gap-2">
+                                     <Input 
+                                        value={newRoleName}
+                                        onChange={(e) => setNewRoleName(e.target.value)}
+                                        placeholder="Enter new role name"
+                                     />
+                                     <Button onClick={handleAddRole}>
+                                        <PlusCircle className="mr-2"/> Add Role
+                                     </Button>
+                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Button onClick={handleSaveChanges} size="lg" className="w-fit">Save All Settings</Button>
                 </CardContent>
             </Card>
         </div>

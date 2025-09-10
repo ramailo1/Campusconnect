@@ -1,13 +1,33 @@
-import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users } from 'lucide-react';
+import { FileText, User, Shield, BookOpen, Calendar, GraduationCap, Settings, Home, LineChart, Users, Component } from 'lucide-react';
 
-export const navItems = [
+export const iconMap: Record<string, React.ElementType> = {
+    Home,
+    BookOpen,
+    Calendar,
+    FileText,
+    LineChart,
+    Users,
+    Shield,
+    Settings,
+    User,
+    GraduationCap,
+    Component
+}
+
+export type NavItem = {
+    href: string;
+    icon: React.ElementType;
+    label: string;
+}
+
+export const navItems: NavItem[] = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/dashboard/courses', icon: BookOpen, label: 'Courses' },
   { href: '/dashboard/appointments', icon: Calendar, label: 'Appointments' },
   { href: '/dashboard/library', icon: FileText, label: 'Library' },
 ];
 
-export const adminNavItems = [
+export const adminNavItems: NavItem[] = [
   { href: '/dashboard/analytics', icon: LineChart, label: 'Analytics' },
   { href: '/dashboard/users', icon: Users, label: 'Users' },
   { href: '/dashboard/audit-logs', icon: Shield, label: 'Audit Logs' },

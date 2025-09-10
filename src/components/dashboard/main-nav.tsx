@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -5,10 +6,11 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { navItems, adminNavItems } from "@/lib/data"
 import { Separator } from "../ui/separator"
+import type { NavItem } from "@/lib/data"
 
 export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname()
-  const NavLink = ({ item }: { item: { href: string, icon: React.ElementType, label: string } }) => (
+  const NavLink = ({ item }: { item: NavItem }) => (
     <Link
       href={item.href}
       className={cn(

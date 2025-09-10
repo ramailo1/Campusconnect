@@ -65,8 +65,8 @@ export default function SettingsPage() {
     });
 
     const [dashboardSettings, setDashboardSettings] = useState({
-        modules: navItems.filter(item => item.href !== '/dashboard').map(item => item.href),
-        metrics: ["online-users", "booked-books", "total-appointments"]
+        metrics: ["total-visitors", "borrowed-books", "overdue-books", "new-members"],
+        sections: ["users-list", "books-list", "top-choices"],
     })
 
 
@@ -151,10 +151,10 @@ export default function SettingsPage() {
         setRoles(roles.filter((_, i) => i !== index))
     }
     
-    const handleDashboardModuleChange = (href: string, checked: boolean) => {
+    const handleDashboardSectionChange = (section: string, checked: boolean) => {
         setDashboardSettings(prev => ({
             ...prev,
-            modules: checked ? [...prev.modules, href] : prev.modules.filter(m => m !== href)
+            sections: checked ? [...prev.sections, section] : prev.sections.filter(m => m !== section)
         }))
     }
     
@@ -170,6 +170,10 @@ export default function SettingsPage() {
         console.log("Saving new admin nav items:", adminNavItems)
         console.log("Saving new roles:", roles)
         console.log("Saving dashboard settings:", dashboardSettings)
+        
+        // This is a mock save. In a real app, you'd save this to a database or a file.
+        localStorage.setItem("dashboardSettings", JSON.stringify(dashboardSettings))
+
         toast({
             title: "Settings Saved",
             description: "Your changes have been updated. (This is a simulation)",
@@ -183,9 +187,16 @@ export default function SettingsPage() {
     const allPermissions = Object.keys(permissionLabels) as Permission[]
     
     const dashboardMetricsOptions = [
-        { key: "online-users", label: "Online Users" },
-        { key: "booked-books", label: "Booked Books" },
-        { key: "total-appointments", label: "Total Appointments" },
+        { key: "total-visitors", label: "Total Visitors" },
+        { key: "borrowed-books", label: "Borrowed Books" },
+        { key: "overdue-books", label: "Overdue Books" },
+        { key: "new-members", label: "New Members" },
+    ]
+    
+    const dashboardSectionsOptions = [
+        { key: "users-list", label: "Users List Card" },
+        { key: "books-list", label: "Books List Card" },
+        { key: "top-choices", label: "Top Choices Section" },
     ]
 
     return (
@@ -485,21 +496,21 @@ export default function SettingsPage() {
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Dashboard Layout</CardTitle>
-                                    <CardDescription>Choose which modules and metrics to display on the main dashboard.</CardDescription>
+                                    <CardDescription>Choose which sections and metrics to display on the main dashboard.</CardDescription>
                                 </CardHeader>
                                 <CardContent className="grid gap-6 md:grid-cols-2">
                                     <div className="grid gap-4">
-                                        <h4 className="font-medium">Dashboard Modules</h4>
+                                        <h4 className="font-medium">Dashboard Sections</h4>
                                         <div className="space-y-2">
-                                            {navItems.filter(item => item.href !== '/dashboard').map(item => (
-                                                <div key={item.href} className="flex items-center space-x-2">
+                                            {dashboardSectionsOptions.map(section => (
+                                                <div key={section.key} className="flex items-center space-x-2">
                                                     <Checkbox
-                                                        id={`module-${item.href}`}
-                                                        checked={dashboardSettings.modules.includes(item.href)}
-                                                        onCheckedChange={(checked) => handleDashboardModuleChange(item.href, !!checked)}
+                                                        id={`section-${section.key}`}
+                                                        checked={dashboardSettings.sections.includes(section.key)}
+                                                        onCheckedChange={(checked) => handleDashboardSectionChange(section.key, !!checked)}
                                                     />
-                                                    <Label htmlFor={`module-${item.href}`} className="font-normal">
-                                                        Display "{item.label}" card
+                                                    <Label htmlFor={`section-${section.key}`} className="font-normal">
+                                                        Display "{section.label}"
                                                     </Label>
                                                 </div>
                                             ))}
@@ -532,5 +543,5 @@ export default function SettingsPage() {
             <Button onClick={handleSaveChanges} size="lg" className="w-fit">Save All Settings</Button>
         </div>
     )
-}
 
+    

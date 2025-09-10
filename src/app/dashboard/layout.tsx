@@ -9,7 +9,7 @@ import {
 import { UserNav } from "@/components/dashboard/user-nav"
 import { MainNav } from "@/components/dashboard/main-nav"
 import Header from "@/components/dashboard/header"
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar"
 import { useState, useEffect } from "react"
 
 export default function DashboardLayout({
@@ -36,7 +36,6 @@ export default function DashboardLayout({
                   <GraduationCap className="h-6 w-6 text-primary" />
                   <span className="group-[[data-state=collapsed]]:hidden">{platformName}</span>
                 </Link>
-                 <SidebarTrigger />
               </SidebarHeader>
               <SidebarContent>
                 <MainNav />

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { navItems, adminNavItems } from "@/lib/data"
 import { Separator } from "../ui/separator"
 import type { NavItem } from "@/lib/data"
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from "../ui/sidebar"
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "../ui/sidebar"
 
 export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname()
@@ -15,18 +15,16 @@ export function MainNav({ isMobile = false }: { isMobile?: boolean }) {
     if (item.hidden) return null;
     return (
       <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton 
-            asChild 
-            isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')}
-            tooltip={item.label}
-          >
-            <Link href={item.href}>
-              <>
-                <item.icon />
-                <span>{item.label}</span>
-              </>
-            </Link>
-          </SidebarMenuButton>
+          <Link href={item.href} legacyBehavior passHref>
+            <SidebarMenuButton
+              as="a"
+              isActive={pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard')}
+              tooltip={item.label}
+            >
+              <item.icon />
+              <span>{item.label}</span>
+            </SidebarMenuButton>
+          </Link>
       </SidebarMenuItem>
     )
   }

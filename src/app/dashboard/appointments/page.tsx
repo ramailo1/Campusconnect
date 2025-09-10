@@ -65,6 +65,7 @@ export default function AppointmentsPage() {
     const students = users.filter(u => u.role === 'student');
 
     // State for the new appointment form
+    const [selectedStudentId, setSelectedStudentId] = useState<string>("");
     const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>("");
     const [selectedBookingDate, setSelectedBookingDate] = useState<Date | undefined>();
 
@@ -135,8 +136,9 @@ export default function AppointmentsPage() {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const time = formData.get('time') as string;
+        const studentId = currentUser.role === 'admin' ? selectedStudentId : currentUser.id;
         
-        if (!selectedAdvisorId || !selectedBookingDate || !time) {
+        if (!selectedAdvisorId || !selectedBookingDate || !time || !studentId) {
             // Basic validation
             return;
         }
@@ -147,7 +149,7 @@ export default function AppointmentsPage() {
 
         const newAppointment: Appointment = {
             id: `appt-${Date.now()}`,
-            studentId: currentUser.id,
+            studentId: studentId,
             advisorId: selectedAdvisorId,
             date: appointmentDateTime,
             status: 'Confirmed',
@@ -156,8 +158,11 @@ export default function AppointmentsPage() {
         setAppointments([newAppointment, ...appointments]);
         // Reset form
         setSelectedAdvisorId("");
+        setSelectedStudentId("");
         setSelectedBookingDate(undefined);
     }
+    
+    const canScheduleAppointments = currentUser.role === 'student' || currentUser.role === 'admin';
 
 
     return (
@@ -225,16 +230,32 @@ export default function AppointmentsPage() {
                                 </CardContent>
                             </Card>
                         </div>
-                        {currentUser.role === 'student' && (
+                        {canScheduleAppointments && (
                         <Card>
                             <CardHeader>
                                 <CardTitle>Schedule an Appointment</CardTitle>
                                 <CardDescription>
-                                    Book a new appointment with an advisor.
+                                    Book a new appointment.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={handleScheduleSubmit} className="grid gap-6">
+                                     {currentUser.role === 'admin' && (
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="student">Student</Label>
+                                            <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a student" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {students.map(student => (
+                                                        <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
+
                                     <div className="grid gap-3">
                                         <Label htmlFor="advisor">Advisor</Label>
                                         <Select value={selectedAdvisorId} onValueChange={setSelectedAdvisorId}>
